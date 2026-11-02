@@ -172,6 +172,14 @@ namespace HazeBuster.Upgrades
                 validUpgrades.RemoveAt(randomIndex);
             }
 
+            // Safety net: if nothing is listening, no menu can ever be shown and the paused game would never resume.
+            if (OnUpgradeSelectionReady == null)
+            {
+                Debug.LogError("[HAZEBUSTER] Nothing is listening for level-ups (no UIManager in the scene?). The first upgrade is picked automatically so the game does not freeze.");
+                ApplySelectedUpgrade(selectedThree[0]);
+                return;
+            }
+
             OnUpgradeSelectionReady?.Invoke(selectedThree);
         }
 

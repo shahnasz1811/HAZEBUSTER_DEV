@@ -218,8 +218,31 @@ namespace HazeBuster.UI
             }
         }
 
+        private bool HasUsableLevelUpCards()
+        {
+            if (levelUpPanel == null || upgradeCards == null) return false;
+            for (int i = 0; i < upgradeCards.Length; i++)
+            {
+                if (upgradeCards[i] != null) return true;
+            }
+            return false;
+        }
+
         private void ShowLevelUpPanel(List<UpgradeData> upgrades)
         {
+            if (!HasUsableLevelUpCards())
+            {
+                // Safety net: the game is already paused, so with no cards to click it would stay frozen forever.
+                Debug.LogError("[HAZEBUSTER] The Level-Up menu is not set up (UIManager has no Level Up Panel or no Upgrade Cards). " +
+                               "Run HazeBuster > Create Complete Game UI & Level-Up Menu, then save the scene. " +
+                               "The first upgrade is picked automatically so the game does not freeze.");
+                if (upgrades != null && upgrades.Count > 0 && UpgradeManager.Instance != null)
+                {
+                    UpgradeManager.Instance.ApplySelectedUpgrade(upgrades[0]);
+                }
+                return;
+            }
+
             if (levelUpPanel != null)
             {
                 levelUpPanel.SetActive(true);

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using HazeBuster.UI;
 
 namespace HazeBuster.Editor
@@ -10,6 +11,10 @@ namespace HazeBuster.Editor
     /// Generates the full Canvas, HUD (Health, EXP, Clock, Dash), and the 3-Card Level-Up Popup
     /// with zero coding required!
     /// Access via: HazeBuster -> Create Complete Game UI & Level-Up Menu
+    ///
+    /// Safe to run again: it reuses what already exists and repairs it. Every UI object it touches
+    /// is guaranteed to have a RectTransform (earlier versions made plain Transforms, which crashed
+    /// the tool halfway and left the Level-Up menu unbuilt and unwired).
     /// </summary>
     public static class UISetupTool
     {
@@ -56,8 +61,7 @@ namespace HazeBuster.Editor
 
             // --- BUILD HUD ---
             GameObject hudPanel = FindOrCreateChild(canvasObj, "HUD_Panel");
-            RectTransform hudRect = hudPanel.GetComponent<RectTransform>();
-            SetStretchFull(hudRect);
+            SetStretchFull(hudPanel.GetComponent<RectTransform>());
 
             // A. Top-Left Health Bar
             GameObject hpObj = FindOrCreateChild(hudPanel, "HealthBar");
@@ -65,7 +69,8 @@ namespace HazeBuster.Editor
             uiManager.healthSlider = hpSlider;
 
             GameObject hpTextObj = FindOrCreateChild(hpObj, "HP_Text");
-            Text hpText = SetupText(hpTextObj, "100 / 100", 18, Color.white, TextAnchor.MiddleCenter);
+            Text hpText = SetupText(hpTextObj, "100 / 100", 18, Color.white, TextAnchor.MiddleCenter, new Vector2(300, 28));
+            SetStretchFull(hpTextObj.GetComponent<RectTransform>()); // text sits centred on the bar
             uiManager.healthText = hpText;
 
             // B. Top-Center EXP Bar
@@ -74,39 +79,40 @@ namespace HazeBuster.Editor
             uiManager.expSlider = expSlider;
 
             GameObject lvlTextObj = FindOrCreateChild(hudPanel, "Level_Text");
-            Text lvlText = SetupText(lvlTextObj, "Lv. 1", 22, Color.cyan, TextAnchor.MiddleCenter);
+            Text lvlText = SetupText(lvlTextObj, "Lv. 1", 22, Color.cyan, TextAnchor.MiddleCenter, new Vector2(200, 30));
             lvlText.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 455);
             uiManager.levelText = lvlText;
 
             // C. Survival Timer Clock
             GameObject timerObj = FindOrCreateChild(hudPanel, "SurvivalTimer_Text");
-            Text timerText = SetupText(timerObj, "00:00", 32, Color.white, TextAnchor.MiddleCenter);
+            Text timerText = SetupText(timerObj, "00:00", 32, Color.white, TextAnchor.MiddleCenter, new Vector2(200, 40));
             timerText.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 415);
             uiManager.timerText = timerText;
 
             // D. Dash Indicator
             GameObject dashObj = FindOrCreateChild(hudPanel, "Dash_Text");
-            Text dashText = SetupText(dashObj, "Dash: 1 / 1", 22, new Color(0.4f, 1f, 0.9f), TextAnchor.MiddleLeft);
-            dashText.GetComponent<RectTransform>().anchoredPosition = new Vector2(-800, -480);
+            Text dashText = SetupText(dashObj, "Dash: 1 / 1", 22, new Color(0.4f, 1f, 0.9f), TextAnchor.MiddleLeft, new Vector2(300, 30));
+            dashText.GetComponent<RectTransform>().anchoredPosition = new Vector2(-790, -480);
             uiManager.dashText = dashText;
 
             // E. Dew Collected
             GameObject dewObj = FindOrCreateChild(hudPanel, "Dew_Text");
-            Text dewText = SetupText(dewObj, "Dew: 0", 22, new Color(0.3f, 1f, 0.6f), TextAnchor.MiddleRight);
-            dewText.GetComponent<RectTransform>().anchoredPosition = new Vector2(800, 480);
+            Text dewText = SetupText(dewObj, "Dew: 0", 22, new Color(0.3f, 1f, 0.6f), TextAnchor.MiddleRight, new Vector2(300, 30));
+            dewText.GetComponent<RectTransform>().anchoredPosition = new Vector2(790, 480);
             uiManager.dewCountText = dewText;
 
             // --- BUILD LEVEL-UP MODAL POPUP ---
             GameObject lvlUpPanel = FindOrCreateChild(canvasObj, "LevelUp_Modal");
-            RectTransform lvlUpRect = lvlUpPanel.GetComponent<RectTransform>();
-            SetStretchFull(lvlUpRect);
+            SetStretchFull(lvlUpPanel.GetComponent<RectTransform>());
+            lvlUpPanel.transform.SetAsLastSibling(); // must draw on top of the HUD
+
             Image bgOverlay = lvlUpPanel.GetComponent<Image>();
             if (bgOverlay == null) bgOverlay = lvlUpPanel.AddComponent<Image>();
             bgOverlay.color = new Color(0.08f, 0.08f, 0.1f, 0.85f); // Dark translucent backdrop
 
             // Modal Header
             GameObject headerObj = FindOrCreateChild(lvlUpPanel, "Header_Text");
-            Text headerText = SetupText(headerObj, "HAZE CLEARED — FIELD UPGRADE DISPATCH", 34, new Color(1f, 0.85f, 0.2f), TextAnchor.MiddleCenter);
+            Text headerText = SetupText(headerObj, "HAZE CLEARED — FIELD UPGRADE DISPATCH", 34, new Color(1f, 0.85f, 0.2f), TextAnchor.MiddleCenter, new Vector2(1100, 60));
             headerText.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 280);
 
             // Cards Horizontal Container
@@ -135,9 +141,13 @@ namespace HazeBuster.Editor
             // Start with LevelUp Panel hidden
             lvlUpPanel.SetActive(false);
 
+            // The fields above were changed on an existing component, so tell Unity the scene needs saving.
+            EditorUtility.SetDirty(uiManager);
+            EditorSceneManager.MarkSceneDirty(uiManagerObj.scene);
+
             Selection.activeGameObject = uiManagerObj;
-            EditorUtility.DisplayDialog("HAZEBUSTER", "Success! Complete HUD and 3-Card Level-Up Menu built and wired automatically!", "Awesome!");
-            Debug.Log("<color=green>[HAZEBUSTER] HUD & Level-Up Menu created successfully in Canvas!</color>");
+            EditorUtility.DisplayDialog("HAZEBUSTER", "Success! Complete HUD and 3-Card Level-Up Menu built and wired automatically!\n\nSave the scene now (Ctrl+S).", "Awesome!");
+            Debug.Log("<color=green>[HAZEBUSTER] HUD & Level-Up Menu created successfully in Canvas! Save the scene (Ctrl+S).</color>");
         }
 
         private static UpgradeCardUI CreateCard(GameObject parent, int index)
@@ -152,6 +162,7 @@ namespace HazeBuster.Editor
 
             Button btn = cardObj.GetComponent<Button>();
             if (btn == null) btn = cardObj.AddComponent<Button>();
+            btn.targetGraphic = cardBg;
             ColorBlock cb = btn.colors;
             cb.highlightedColor = new Color(0.25f, 0.45f, 0.5f, 1f);
             cb.pressedColor = new Color(0.1f, 0.35f, 0.4f, 1f);
@@ -163,39 +174,52 @@ namespace HazeBuster.Editor
 
             // Card Title
             GameObject titleObj = FindOrCreateChild(cardObj, "Title_Text");
-            Text title = SetupText(titleObj, "Upgrade Title", 22, new Color(1f, 0.9f, 0.3f), TextAnchor.MiddleCenter);
+            Text title = SetupText(titleObj, "Upgrade Title", 22, new Color(1f, 0.9f, 0.3f), TextAnchor.MiddleCenter, new Vector2(270, 60));
             title.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 150);
-            title.GetComponent<RectTransform>().sizeDelta = new Vector2(270, 60);
             cardUI.titleText = title;
 
             // Card Description
             GameObject descObj = FindOrCreateChild(cardObj, "Desc_Text");
-            Text desc = SetupText(descObj, "Increases water pressure and attack power.", 18, Color.white, TextAnchor.UpperCenter);
+            Text desc = SetupText(descObj, "Increases water pressure and attack power.", 18, Color.white, TextAnchor.UpperCenter, new Vector2(260, 160));
             desc.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 20);
-            desc.GetComponent<RectTransform>().sizeDelta = new Vector2(260, 160);
             cardUI.descriptionText = desc;
 
             // Select Prompt
             GameObject promptObj = FindOrCreateChild(cardObj, "SelectPrompt_Text");
-            Text prompt = SetupText(promptObj, "[ CLICK TO SELECT ]", 15, new Color(0.3f, 1f, 0.6f), TextAnchor.MiddleCenter);
+            Text prompt = SetupText(promptObj, "[ CLICK TO SELECT ]", 15, new Color(0.3f, 1f, 0.6f), TextAnchor.MiddleCenter, new Vector2(260, 30));
             prompt.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -165);
 
             return cardUI;
         }
 
+        /// <summary>
+        /// Finds a child by name or creates it. The result ALWAYS has a RectTransform, even if an
+        /// older run of this tool left a plain Transform behind (Unity converts it in place and
+        /// keeps its children).
+        /// </summary>
         private static GameObject FindOrCreateChild(GameObject parent, string name)
         {
             Transform t = parent.transform.Find(name);
-            if (t != null) return t.gameObject;
-            GameObject obj = new GameObject(name);
-            obj.transform.SetParent(parent.transform, false);
+            GameObject obj;
+            if (t != null)
+            {
+                obj = t.gameObject;
+            }
+            else
+            {
+                obj = new GameObject(name, typeof(RectTransform));
+                obj.transform.SetParent(parent.transform, false);
+            }
+
+            RectTransform rect = obj.GetComponent<RectTransform>();
+            if (rect == null) rect = obj.AddComponent<RectTransform>();
+            rect.localScale = Vector3.one; // repairs objects that were scaled by accident
             return obj;
         }
 
         private static Slider SetupSlider(GameObject obj, Vector2 pos, Vector2 size, Color fillColor)
         {
             RectTransform rect = obj.GetComponent<RectTransform>();
-            if (rect == null) rect = obj.AddComponent<RectTransform>();
             rect.anchoredPosition = pos;
             rect.sizeDelta = size;
 
@@ -217,6 +241,7 @@ namespace HazeBuster.Editor
             Slider slider = obj.GetComponent<Slider>();
             if (slider == null) slider = obj.AddComponent<Slider>();
             slider.fillRect = fill.GetComponent<RectTransform>();
+            slider.interactable = false; // bars are display only
             slider.minValue = 0f;
             slider.maxValue = 1f;
             slider.value = 1f;
@@ -224,17 +249,21 @@ namespace HazeBuster.Editor
             return slider;
         }
 
-        private static Text SetupText(GameObject obj, string content, int fontSize, Color col, TextAnchor alignment)
+        private static Text SetupText(GameObject obj, string content, int fontSize, Color col, TextAnchor alignment, Vector2 size)
         {
             RectTransform rect = obj.GetComponent<RectTransform>();
             if (rect == null) rect = obj.AddComponent<RectTransform>();
+            rect.sizeDelta = size;
 
             Text txt = obj.GetComponent<Text>();
             if (txt == null) txt = obj.AddComponent<Text>();
+            if (txt.font == null) txt.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             txt.text = content;
             txt.fontSize = fontSize;
             txt.color = col;
             txt.alignment = alignment;
+            txt.verticalOverflow = VerticalWrapMode.Overflow;
+            txt.raycastTarget = false; // clicks go through the text to the card button behind it
             return txt;
         }
 
