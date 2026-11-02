@@ -246,7 +246,6 @@ MonoBehaviour:
   baseMaxHealth: 100
   maxHealth: 0
   currentHealth: 0
-  isInvulnerable: 0
   hurtInvulnerabilityDuration: 1
   characterRenderer: {fileID: 0}
   hurtColor: {r: 1, g: 0.4, b: 0.4, a: 0.7}
@@ -280,6 +279,7 @@ MonoBehaviour:
   hasSteamBurst: 0
   steamBurstRadius: 2.5
   steamBurstDamage: 25
+  arenaEdgeMargin: 0.6
 --- !u!58 &54150370
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -526,6 +526,7 @@ MonoBehaviour:
   target: {fileID: 0}
   smoothTime: 0.1
   offset: {x: 0, y: 0, z: -10}
+  clampToArena: 1
   useBounds: 0
   minBounds: {x: -25, y: -25}
   maxBounds: {x: 25, y: 25}
@@ -753,10 +754,10 @@ RectTransform:
   - {fileID: 750551833}
   m_Father: {fileID: 2036401348}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &732016892
 MonoBehaviour:
@@ -1192,7 +1193,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 114}
+  m_AnchoredPosition: {x: 0, y: 280}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1182840880
@@ -1269,10 +1270,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 2062471927}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1185742872
 MonoBehaviour:
@@ -1344,10 +1345,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 567522689}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1305454209
 MonoBehaviour:
@@ -1528,7 +1529,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05092b2bc0fd99e4a8043a190a16a45b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Utility.InfiniteGround
-  target: {fileID: 0}
+  viewCamera: {fileID: 0}
+  target: {fileID: 54150373}
   tileSize: 1
   tilesPerChunk: 16
 --- !u!1 &1621203516

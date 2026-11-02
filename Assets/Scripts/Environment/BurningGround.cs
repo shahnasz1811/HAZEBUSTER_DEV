@@ -37,7 +37,17 @@ namespace HazeBuster.Environment
             {
                 spriteRenderer.color = activeFireColor;
             }
-            Destroy(gameObject, lifetime);
+            Invoke(nameof(BurnOut), lifetime);
+        }
+
+        private void BurnOut()
+        {
+            // Nobody put it out, so the peat stays scorched, and the world remembers it.
+            if (!isExtinguished)
+            {
+                EnvironmentStreamer.AddMark(transform.position, EnvironmentMarkType.Scorched);
+            }
+            Destroy(gameObject);
         }
 
         private void OnTriggerStay2D(Collider2D collision)
@@ -58,6 +68,9 @@ namespace HazeBuster.Environment
         {
             if (isExtinguished) return;
             isExtinguished = true;
+
+            // The world remembers it: this patch of peat stays damp and recovering when you come back.
+            EnvironmentStreamer.AddMark(transform.position, EnvironmentMarkType.Restored);
 
             if (spriteRenderer != null)
             {

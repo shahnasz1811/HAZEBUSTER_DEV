@@ -13,7 +13,7 @@ A 2D top-down **action roguelite** about pushing back peatland haze. You play an
 | Inspiration | *Everything is a Crab*, *Vampire Survivors*, *Nuclear Throne* |
 | Design doc | [`HAZEBUSTER_GDD.md`](HAZEBUSTER_GDD.md) |
 
-> **Status (2 Nov 2026): early prototype.** Most gameplay scripts exist, but the saved scene (`SampleScene`) contains only the Main Camera, several prefabs are missing, and parts of the GDD are not built yet. A round of bug fixes and arena work was written on 2 Nov 2026 **but has not been compiled in Unity yet**: open the project, let it compile, and fix any console errors before building further. See [Known issues](#known-issues), [GDD coverage](#gdd-coverage), [Roadmap](#roadmap) and the [Progress log](#progress-log).
+> **Status (2 Nov 2026): early prototype.** Most gameplay scripts exist, but the saved scene (`SampleScene`) now has the Player, ground, managers and HUD, and the boss and several prefabs are still missing. Parts of the GDD are not built yet. The world is now endless (see the World row below). Bug fixes, arena code and the endless world were written on 2 Nov 2026 **but have not been compiled in Unity yet**: open the project, let it compile, and fix any console errors before building further. See [Known issues](#known-issues), [GDD coverage](#gdd-coverage), [Roadmap](#roadmap) and the [Progress log](#progress-log).
 
 ---
 
@@ -53,7 +53,7 @@ Explore smoldering peatland (haze limits vision)
 3. Run **HazeBuster > Generate Pixel Art Placeholders** to create the sprites in `Assets/Sprites`.
 4. Build the player, prefabs and managers following [`UNITY_SETUP_GUIDE.md`](UNITY_SETUP_GUIDE.md) sections 4-6. Skip the 2D-light steps: they need URP, which this project does not have. Put the Player on the `Player` tag.
 5. Run **HazeBuster > Create Complete Game UI & Level-Up Menu**.
-6. Optional: **HazeBuster > Build Arena Walls (60x60)**. The player is already kept inside the arena by code, so the walls are only extra.
+6. Skip **HazeBuster > Build Arena Walls (60x60)** unless you want a closed arena. The world is endless, and those walls would stop the player from leaving the square.
 7. Press Play.
 
 | Menu item | Tool | What it does |
@@ -61,7 +61,7 @@ Explore smoldering peatland (haze limits vision)
 | HazeBuster > Ensure Required Tags | `TagSetup` | Adds the `Enemy` and `Hazard` tags if they are missing. Also runs by itself on script reload |
 | HazeBuster > Generate Pixel Art Placeholders | `PixelArtGenerator` | Writes 11 placeholder PNGs and sets Point filter / no compression |
 | HazeBuster > Create Complete Game UI & Level-Up Menu | `UISetupTool` | Builds the HUD and the 3-card level-up modal |
-| HazeBuster > Build Arena Walls (60x60) | `ArenaSetupTool` | Adds four invisible box-collider walls, sized from `ArenaBounds.halfSize` |
+| HazeBuster > Build Arena Walls (60x60) | `ArenaSetupTool` | Adds four invisible box-collider walls, sized from `ArenaBounds.halfSize`. Only for a closed arena: they stop the player leaving the square |
 
 ---
 
@@ -74,12 +74,12 @@ Assets/
     Enemies/          Ember, BurnedStump, Gambut
     Weapons/          WaterProjectile
     Resources/        DewPickup
-  Scenes/             SampleScene (Main Camera only)
+  Scenes/             SampleScene (Player, ground, managers, HUD)
   Scripts/
     Boss/             FireBoss, FireProjectile
     Core/             GameManager, SoundManager
     Enemies/          EnemyBase, EmberEnemy, BurnedStumpEnemy, GambutEnemy, EnemySpawner
-    Environment/      BurningGround, DewPickup
+    Environment/      BurningGround, DewPickup, EnvironmentStreamer
     MetaProgression/  MetaProgressionManager
     Player/           PlayerController, PlayerHealth, PlayerExperience, PlayerVision, WaterTrail
     UI/               UIManager, UpgradeCardUI
@@ -95,17 +95,18 @@ Assets/
 | System | Current behaviour |
 | :--- | :--- |
 | Run flow | `GameManager` states: Playing, LevelingUp, Paused, GameOver, Victory. `Time.timeScale` is 0 outside Playing. Boss triggers at `runDurationToBoss` (default 300 s). Retry reloads the scene. Every manager belongs to its scene, so a Retry starts completely fresh. Credits are paid out once per run. |
-| Player | 100 HP, move speed 5, 1 s hurt invulnerability (separate from dash invulnerability). Dash: 1.5 s cooldown, speed 16 for 0.2 s, 1 charge. Movement uses `Rigidbody2D`. Kept inside `ArenaBounds` (60 x 60) by code. |
+| Player | 100 HP, move speed 5, 1 s hurt invulnerability (separate from dash invulnerability). Dash: 1.5 s cooldown, speed 16 for 0.2 s, 1 charge. Movement uses `Rigidbody2D`. Not limited: the world is endless. |
 | Experience | Dew tiers: small 1, medium 5, large 20 EXP. First level needs 6 EXP, then `round(previous x 1.3) + 3`. Pickup radius starts at 1.2. |
 | Water Gun | 15 damage, 14 units/s, 2 shots/s, 12 degree fan spread, knockback 6. Droplets are pooled and reused. |
 | Peat Sprinkler | Locked until chosen. 4 nozzles, 90 degrees/s, 8 damage. |
 | Foam Bomb Mortar | Locked until chosen. 0.4 shots/s, impact 35, radius 3.5, puddle lasts 5 s. |
 | Enemies | Ember 15 HP / speed 4.2. Burned Stump 80 HP / 1.4 (drops 20 EXP). Gambut 45 HP / 2.0 (drops 5 EXP, leaves burning ground). Health is multiplied by `1 + 0.12 x minutes` at spawn. Enemies more than 35 units from the player are removed (the boss is not). |
-| Boss | Wildfire Nexus, 1200 HP. Phases switch at 66 % and 33 % HP. Attacks: fireball nova, fireball barrage, ember summon, burning-ground patches. It spawns on the roomier side of the arena. |
-| Spawner | Interval goes 1.8 s to 0.35 s over the run. Under 30 % of the run: embers only. 30-65 %: embers and stumps. Over 65 %: all three. Up to 65 alive. Spawn points stay inside the arena. An unassigned prefab falls back to an ember. |
+| Boss | Wildfire Nexus, 1200 HP. Phases switch at 66 % and 33 % HP. Attacks: fireball nova, fireball barrage, ember summon, burning-ground patches. It spawns 9 units from the player in a random direction (on the roomier side while the arena is on). |
+| Spawner | Interval goes 1.8 s to 0.35 s over the run. Under 30 % of the run: embers only. 30-65 %: embers and stumps. Over 65 %: all three. Up to 65 alive. Spawn points are on a ring around the player. An unassigned prefab falls back to an ember. |
 | Upgrades | 19 built-in cards, 3 random per level-up, game pauses while choosing. If one pickup gives several levels, each level-up shows its own cards in turn. |
 | Meta-progression | 6 permanent perks, 5 ranks each, costs 20 / 50 / 100 / 180 / 300, saved in `PlayerPrefs`. Credits = dew collected (+100 on victory). |
 | UI | HUD (HP, EXP, level, timer, dash, dew) and level-up modal. `UIManager` has fields for the boss bar, game over, victory and shop panels, but no tool builds them yet. |
+| World | Endless. `InfiniteGround` is one tiled sprite that follows the camera in whole-tile steps and resizes itself to the view, so the tiles stay locked to one fixed grid. `EnvironmentStreamer` builds props around the camera in 10 x 10 unit chunks and creates itself if the scene has none. Each chunk is generated from the world seed and its coordinates, so a place looks the same when you come back (the seed is random each run by default). Fires you put out leave a restored patch and fires that burn out leave a scorched patch. These marks are stored per chunk (40 per chunk, oldest dropped) and come back when the chunk loads again. Nothing is saved between runs. Placeholder props are generated until you assign sprites. |
 | Audio | Procedural 8-bit sound effects, generated once and cached. No audio files needed. |
 
 ---
@@ -138,7 +139,7 @@ Also found and fixed while working (not in the original list):
 
 | # | Severity | Where | Problem |
 | :-: | :--- | :--- | :--- |
-| 2 | High | Scene and prefabs | The saved scene has only the Main Camera. There are no Player, FireBoss, FireProjectile, BurningGround, FoamBomb or FoamPuddle prefabs. Without a boss prefab the boss never spawns, so a run cannot be won. |
+| 2 | High | Scene and prefabs | The saved scene has the Player, ground, managers and HUD, but there are no FireBoss, FireProjectile, BurningGround, FoamBomb or FoamPuddle prefabs. Without a boss prefab the boss never spawns, so a run cannot be won. |
 | 8 | Medium | Sprite import | Sprites import at 100 pixels per unit. A 12 px ember is 0.12 units wide but its collider radius is 0.5. The scene camera size is 5. Characters appear tiny. |
 | 10 | Medium | `WaterTrail`, `FoamPuddle` | The Hydro-Dash puddle has no sprite, so it is invisible. `FoamPuddle.slowMultiplier` is never applied. |
 | 11 | Low | `FoamBombLauncher` | `Vector3.zero` means "no target", so a target at the origin is ignored. Physics queries run every frame and allocate. |
@@ -173,7 +174,7 @@ A full overhaul was started on 1 Nov 2026. The audit is finished and the Foundat
 
 - [x] Audit the project against the GDD
 - [x] Foundation (written, not yet compiled)
-  - [x] Shared arena bounds: `ArenaBounds` is 60 x 60 and is used by the player clamp, the spawner and the wall tool. Added later on 2 Nov 2026 (not compiled): water droplets and boss fireballs end at the arena edge, the camera keeps its view inside the arena, and the ground sits fixed on the arena
+  - [x] Shared arena bounds: `ArenaBounds` is 60 x 60 and is used by the player clamp, the spawner and the wall tool. Since 2 Nov 2026 (not compiled) the arena is switched OFF by default so the world is endless. The arena code stays for a closed boss fight: while it is on, shots end at the edge, the camera keeps its view inside, and the player is clamped
   - [x] Cached sound effects
   - [x] Run and save lifecycle fixes
   - [x] Object pooling for the high-volume projectiles: water droplets (Water Gun and Peat Sprinkler) and boss fireballs use `PoolManager`. Enemies and dew are still created and destroyed. They appear only a few per second, so extra reset code is not worth it until profiling shows a need
@@ -182,7 +183,7 @@ A full overhaul was started on 1 Nov 2026. The audit is finished and the Foundat
 - [ ] Upgrades: ranks, weighted rolls, evolutions, reroll, polished 3-card menu, pause screen showing the current build
 - [ ] Meta-progression: Eco-Research Lab screen, JSON save, GDD perk values
 - [ ] Haze: a vision overlay that works without URP, with glow for enemies outside the circle
-- [ ] Environment: streamed decor, drifting ash, caps on hazards and dew
+- [ ] Environment (partly done): streamed props and remembered marks are written (2 Nov 2026, not compiled). Still to do: drifting ash, caps on hazards and dew
 - [ ] One-click "Build Complete Game" editor tool (tags, prefabs, scene, UI)
 - [ ] Final checks and updated setup guide
 
@@ -190,8 +191,8 @@ A full overhaul was started on 1 Nov 2026. The audit is finished and the Foundat
 
 1. Open the project in Unity, let it compile, and fix any Console errors. `UISetupTool` and `PixelArtGenerator` were not opened this session. If one of them reports an error, look for a use of the removed `PlayerHealth.isInvulnerable` setter.
 2. Play-test the pooled projectiles once a scene exists: droplets and fireballs should fire, hit, pierce and expire as before. A reused projectile keeps nothing from its last flight because `Initialize()` resets it. If a droplet or fireball prefab later gets a trail or particle child, clear it when the object is reused. Pooling enemies would need their stat setup and `FinalizeHealth()` moved out of `Start()`, which does not run again on reuse.
-3. Arena use is finished (2 Nov 2026, not compiled): projectiles end at the arena edge, `CameraFollow.clampToArena` keeps the view inside the arena, and `InfiniteGround.fitToArena` fixes the ground on the arena. Play-test the camera once a scene exists. At camera size 5 on a 16:9 screen the view is about 17.8 x 10 units, so the camera stops moving when the player is that far from the arena edge.
-4. Consider doing the one-click "Build Complete Game" tool (currently late in the roadmap) next. Without a scene, Player and prefabs, none of these fixes can be play-tested (open issue 2).
+3. Play-test the endless world (2 Nov 2026, not compiled). Walk far in one direction and come back: the ground must never show a seam or an edge, and the props must be exactly where you left them. Remembered marks only appear once a `BurningGround` prefab exists (open issue 2), because that is what leaves them. Tune `EnvironmentStreamer` in the Inspector (chunk size, props per chunk, prop size in tiles) and assign your own sprites to Decor Sprites. The arena code (`ArenaBounds.enabled`) is kept for a future closed boss fight.
+4. The scene now has a Player, ground, managers and HUD, but no boss, FireProjectile, BurningGround, FoamBomb or FoamPuddle prefabs (open issue 2). Consider the one-click "Build Complete Game" tool next.
 
 ### Progress log
 
@@ -199,7 +200,8 @@ A full overhaul was started on 1 Nov 2026. The audit is finished and the Foundat
 | :--- | :--- | :--- |
 | 1 Nov 2026 | Audit against the GDD. Added `ArenaBounds.cs` | Done |
 | 2 Nov 2026 | Foundation (bug fixes, arena clamping, projectile pooling). New: `Editor/TagSetup.cs`, `Utility/PlayerLocator.cs`, `Utility/PoolManager.cs`. Rewritten: `Core/SoundManager.cs`, `Enemies/EnemyBase.cs`, `Enemies/EnemySpawner.cs`, `Player/PlayerHealth.cs`, `Weapons/WaterProjectile.cs`, `Boss/FireProjectile.cs`. Edited: `Core/GameManager.cs`, `MetaProgression/MetaProgressionManager.cs`, `Upgrades/UpgradeManager.cs`, `UI/UIManager.cs`, `Player/PlayerController.cs`, `Environment/DewPickup.cs`, `Enemies/EmberEnemy.cs`, `Enemies/BurnedStumpEnemy.cs`, `Enemies/GambutEnemy.cs`, `Boss/FireBoss.cs`, `Weapons/WaterGun.cs`, `Weapons/PeatSprinkler.cs`, `Utility/ArenaBounds.cs`, `Editor/ArenaSetupTool.cs` | Written, **not compiled** |
-| 2 Nov 2026 | Arena use finished. Edited: `Weapons/WaterProjectile.cs` and `Boss/FireProjectile.cs` (shots end at the arena edge, 2 unit grace), `Utility/CameraFollow.cs` (new `clampToArena`, on by default), `Utility/InfiniteGround.cs` (new `fitToArena`, on by default) | Written, **not compiled** |
+| 2 Nov 2026 | Arena code finished, then made optional. Edited: `Weapons/WaterProjectile.cs` and `Boss/FireProjectile.cs` (shots end at the arena edge while the arena is on), `Utility/CameraFollow.cs` (new `clampToArena`, only acts while the arena is on) | Written, **not compiled** |
+| 2 Nov 2026 | Endless world, after the ground stopped following the player. New: `Environment/EnvironmentStreamer.cs` (chunked props, remembered marks, creates itself if the scene has none). Rewritten: `Utility/InfiniteGround.cs` (follows the camera, sizes itself to the view, locked to the world tile grid; the earlier `fitToArena` option is gone). Edited: `Utility/ArenaBounds.cs` (off by default), `Environment/BurningGround.cs` (leaves restored or scorched marks), `Enemies/EnemySpawner.cs` (boss spawn direction) | Written, **not compiled** |
 
 Planned approach for the rest: distance-based hit detection instead of physics callbacks, pooled projectiles, enemies and pickups, and one place that combines base, meta and run stat bonuses.
 

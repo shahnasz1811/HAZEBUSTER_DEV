@@ -10,7 +10,7 @@ namespace HazeBuster.Enemies
     /// <summary>
     /// Spawns fire hazards just outside the player's vision edge so they emerge from the haze.
     /// Manages escalating survival waves, difficulty scaling over time, and boss awakening.
-    /// Spawn points are kept inside the shared ArenaBounds.
+    /// Spawn points are kept inside ArenaBounds only while that arena is switched on (the world is endless by default).
     /// </summary>
     public class EnemySpawner : MonoBehaviour
     {
@@ -154,8 +154,10 @@ namespace HazeBuster.Enemies
             }
             if (playerTransform == null) return;
 
-            // Spawn the boss on the side of the player that has more room inside the arena.
-            Vector2 awayFromEdge = playerTransform.position.y > ArenaBounds.center.y ? Vector2.down : Vector2.up;
+            // With a closed arena, spawn the boss on the side with more room. In the endless world any direction is fine.
+            Vector2 awayFromEdge = ArenaBounds.enabled
+                ? (playerTransform.position.y > ArenaBounds.center.y ? Vector2.down : Vector2.up)
+                : Random.insideUnitCircle.normalized;
             Vector2 bossPos = ArenaBounds.Clamp((Vector2)playerTransform.position + (awayFromEdge * 9f), 3f);
 
             GameObject boss = Instantiate(fireBossPrefab, (Vector3)bossPos, Quaternion.identity);

@@ -172,11 +172,15 @@ MonoBehaviour:
   enemyName: Fire Hazard
   maxHealth: 30
   currentHealth: 0
-  moveSpeed: 3
-  contactDamage: 15
+  moveSpeed: 1
+  contactDamage: 2
   dewDropAmount: 1
+  healthMultiplier: 1
   dewPrefab: {fileID: 1586141086967353211, guid: df0579dbe3f3d6647b89786a802803b9, type: 3}
+  dewDropTier: 1
   spriteRenderer: {fileID: 0}
   hurtColor: {r: 0, g: 1, b: 1, a: 1}
-  wobbleFrequency: 5
+  despawnWhenFar: 1
+  despawnDistance: 35
+  wobbleFrequency: 2
   wobbleAmplitude: 1.2

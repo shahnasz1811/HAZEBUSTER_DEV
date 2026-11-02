@@ -3,15 +3,19 @@ using UnityEngine;
 namespace HazeBuster.Utility
 {
     /// <summary>
-    /// The playable peatland arena. The player, enemies, hazards and decor all share this
-    /// one square, so the world stays bounded and the boss fight has a real arena.
-    /// No physics walls are needed: everything is clamped with ArenaBounds.Clamp().
+    /// Optional square play area (60 x 60 by default).
+    ///
+    /// The world is ENDLESS by default, so `enabled` is false and every helper here lets everything
+    /// through: the player, enemies, projectiles and the camera are not limited at all.
+    /// Set `ArenaBounds.enabled = true` only for a closed fight, for example a boss arena.
+    /// While it is on, the player is clamped with Clamp(), shots end at the edge, and the camera
+    /// keeps its view inside the square.
     /// </summary>
     public static class ArenaBounds
     {
         public static Vector2 center = Vector2.zero;
-        public static float halfSize = 30f;   // 60 x 60 world units (matches HazeBuster > Build Arena Walls)
-        public static bool enabled = true;
+        public static float halfSize = 30f;   // 60 x 60 when the arena is switched on
+        public static bool enabled = false;   // endless world by default
 
         public static Vector2 Clamp(Vector2 p, float margin = 0.5f)
         {
