@@ -20,10 +20,11 @@ namespace HazeBuster.Enemies
             base.Start();
             enemyName = "Gambut Creeper";
             maxHealth = 45f;
-            currentHealth = maxHealth;
+            FinalizeHealth(); // applies the spawner's health multiplier
             moveSpeed = 2.0f;
             contactDamage = 18f;
-            dewDropAmount = 2;
+            dewDropAmount = 1;
+            dewDropTier = DewPickup.DewTier.Medium; // 5 EXP per defeated Gambut monster!
         }
 
         protected override void Update()

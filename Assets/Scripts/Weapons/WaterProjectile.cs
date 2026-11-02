@@ -1,12 +1,14 @@
 using UnityEngine;
 using HazeBuster.Enemies;
 using HazeBuster.Environment;
+using HazeBuster.Utility;
 
 namespace HazeBuster.Weapons
 {
     /// <summary>
     /// Pressurized water projectile shot by the Water Gun.
     /// Extinguishes burning hazards, knocks back enemies, and pierces targets.
+    /// Projectiles are pooled: Initialize() resets everything for a new flight.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
     public class WaterProjectile : MonoBehaviour
@@ -19,6 +21,8 @@ namespace HazeBuster.Weapons
         public float lifetime = 3f;
 
         private int currentPierces = 0;
+        private float lifeTimer = 0f;
+        private bool inFlight = false;
         private Rigidbody2D rb;
 
         private void Awake()
@@ -36,6 +40,11 @@ namespace HazeBuster.Weapons
             pierceCount = maxPierce;
             knockbackForce = knockback;
 
+            // A pooled projectile is reused, so reset everything left over from its last flight.
+            currentPierces = 0;
+            lifeTimer = lifetime;
+            inFlight = true;
+
             // Scale sprite
             transform.localScale = Vector3.one * sizeMultiplier;
 
@@ -45,12 +54,26 @@ namespace HazeBuster.Weapons
             // Rotate in flight direction
             float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
             transform.rotation = Quaternion.Euler(0, 0, angle);
+        }
 
-            Destroy(gameObject, lifetime);
+        private void Update()
+        {
+            if (!inFlight) return;
+
+            // Uses scaled time like the old Destroy(gameObject, lifetime), so it pauses with the game.
+            lifeTimer -= Time.deltaTime;
+            // A shot also ends at the arena edge (2 unit grace) so it never flies through empty space.
+            if (lifeTimer <= 0f || !ArenaBounds.Contains(transform.position, -2f))
+            {
+                Release();
+            }
         }
 
         private void OnTriggerEnter2D(Collider2D collision)
         {
+            // Ignore hits that arrive after this projectile has already been returned to the pool.
+            if (!inFlight) return;
+
             // 1. Extinguish burning peat ground hazards
             if (collision.CompareTag("Hazard") || collision.GetComponent<BurningGround>() != null)
             {
@@ -74,10 +97,22 @@ namespace HazeBuster.Weapons
                     currentPierces++;
                     if (currentPierces >= pierceCount)
                     {
-                        Destroy(gameObject);
+                        Release();
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Ends this flight and returns the projectile to the pool (or destroys it if it was not pooled).
+        /// </summary>
+        private void Release()
+        {
+            if (!inFlight) return;
+            inFlight = false;
+
+            rb.linearVelocity = Vector2.zero;
+            PoolManager.Despawn(gameObject);
         }
     }
 }

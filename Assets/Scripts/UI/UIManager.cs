@@ -56,12 +56,27 @@ namespace HazeBuster.UI
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
+            // Scene-scoped singleton ("latest wins"): a Retry reloads the scene with a fresh UI.
+            if (Instance != null && Instance != this && Instance.gameObject.scene == gameObject.scene)
             {
                 Destroy(gameObject);
                 return;
             }
             Instance = this;
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+
+            // Unsubscribe so a destroyed UI is never called by objects that outlive it.
+            if (playerHealth != null) playerHealth.OnHealthChanged -= UpdateHealthBar;
+            if (playerExperience != null) playerExperience.OnExperienceChanged -= UpdateExpBar;
+            if (UpgradeManager.Instance != null) UpgradeManager.Instance.OnUpgradeSelectionReady -= ShowLevelUpPanel;
+            if (GameManager.Instance != null) GameManager.Instance.OnGameStateChanged -= HandleGameStateChanged;
         }
 
         private void Start()

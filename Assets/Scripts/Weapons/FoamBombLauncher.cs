@@ -66,7 +66,7 @@ namespace HazeBuster.Weapons
             // If no enemy found, aim towards mouse
             if (bestPos == Vector3.zero && Camera.main != null)
             {
-                Vector3 mouse = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                Vector3 mouse = Camera.main.ScreenToWorldPoint(HazeBuster.Utility.InputHelper.GetMousePosition());
                 mouse.z = 0f;
                 if (Vector2.Distance(transform.position, mouse) <= targetingRange)
                 {

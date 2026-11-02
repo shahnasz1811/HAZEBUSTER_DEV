@@ -2,6 +2,7 @@ using UnityEngine;
 using HazeBuster.Core;
 using HazeBuster.Upgrades;
 using HazeBuster.MetaProgression;
+using HazeBuster.Utility;
 
 namespace HazeBuster.Weapons
 {
@@ -9,6 +10,7 @@ namespace HazeBuster.Weapons
     /// The primary weapon of the Scientist Engineer.
     /// Fires pressurized water droplets towards the mouse cursor.
     /// Fully upgradeable in fire rate, multishot/spread, projectile size, and pierce.
+    /// Uses InputHelper so mouse aiming and firing work in any input mode.
     /// </summary>
     public class WaterGun : WeaponBase
     {
@@ -46,15 +48,21 @@ namespace HazeBuster.Weapons
 
         protected override bool CanFire()
         {
-            // Fires when Left Mouse Button is held down
-            return Input.GetMouseButton(0);
+            // Fires when Left Mouse Button is held down via universal InputHelper
+            return InputHelper.IsFireHeld();
         }
 
         protected override void Fire()
         {
-            if (mainCamera == null || projectilePrefab == null) return;
+            if (mainCamera == null)
+            {
+                mainCamera = Camera.main;
+                if (mainCamera == null) return;
+            }
 
-            Vector3 mousePos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            if (projectilePrefab == null) return;
+
+            Vector3 mousePos = mainCamera.ScreenToWorldPoint(InputHelper.GetMousePosition());
             Vector2 baseDirection = ((Vector2)(mousePos - firePoint.position)).normalized;
 
             // Multi-shot fan calculations
@@ -65,7 +73,7 @@ namespace HazeBuster.Weapons
                 float currentAngle = startAngle + (i * spreadAngle);
                 Vector2 dir = RotateVector(baseDirection, currentAngle);
 
-                GameObject projObj = Instantiate(projectilePrefab, firePoint.position, Quaternion.identity);
+                GameObject projObj = PoolManager.Spawn(projectilePrefab, firePoint.position, Quaternion.identity);
                 WaterProjectile proj = projObj.GetComponent<WaterProjectile>();
                 if (proj != null)
                 {

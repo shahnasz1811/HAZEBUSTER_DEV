@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using HazeBuster.Environment;
 
 namespace HazeBuster.Enemies
 {
@@ -22,10 +23,11 @@ namespace HazeBuster.Enemies
             base.Start();
             enemyName = "Smoldering Burned Stump";
             maxHealth = 80f;
-            currentHealth = maxHealth;
+            FinalizeHealth(); // applies the spawner's health multiplier
             moveSpeed = 1.4f;
             contactDamage = 25f;
-            dewDropAmount = 3;
+            dewDropAmount = 1;
+            dewDropTier = DewPickup.DewTier.Large; // 20 EXP per defeated heavy Burned Stump!
         }
 
         protected override void Update()

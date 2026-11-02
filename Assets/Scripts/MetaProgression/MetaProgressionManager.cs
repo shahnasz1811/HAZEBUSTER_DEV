@@ -37,14 +37,25 @@ namespace HazeBuster.MetaProgression
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
+            // Scene-scoped singleton ("latest wins"). Saved progress lives in PlayerPrefs, so a fresh manager
+            // after a Retry simply reloads it. DontDestroyOnLoad was removed on purpose: this component shares
+            // the _GameManagers object with the GameManager, spawner and upgrade manager, and keeping that
+            // object alive carried a stale run into the next one.
+            if (Instance != null && Instance != this && Instance.gameObject.scene == gameObject.scene)
             {
                 Destroy(gameObject);
                 return;
             }
             Instance = this;
-            DontDestroyOnLoad(gameObject);
             LoadProgress();
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
         }
 
         public void LoadProgress()
@@ -133,7 +144,15 @@ namespace HazeBuster.MetaProgression
         [ContextMenu("Reset All Save Data")]
         public void ResetSaveData()
         {
-            PlayerPrefs.DeleteAll();
+            // Only remove this game's own keys instead of wiping every PlayerPrefs entry.
+            PlayerPrefs.DeleteKey(KEY_ECO_CREDITS);
+            PlayerPrefs.DeleteKey(KEY_MOVE_SPEED_LVL);
+            PlayerPrefs.DeleteKey(KEY_MAX_HEALTH_LVL);
+            PlayerPrefs.DeleteKey(KEY_DASH_CD_LVL);
+            PlayerPrefs.DeleteKey(KEY_WATER_FR_LVL);
+            PlayerPrefs.DeleteKey(KEY_VISION_LVL);
+            PlayerPrefs.DeleteKey(KEY_MAGNET_LVL);
+            PlayerPrefs.Save();
             LoadProgress();
             Debug.Log("[HAZEBUSTER] All meta-progression reset to zero.");
         }

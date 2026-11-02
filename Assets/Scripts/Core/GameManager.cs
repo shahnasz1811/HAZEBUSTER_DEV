@@ -37,15 +37,29 @@ namespace HazeBuster.Core
 
         public event Action<GameState> OnGameStateChanged;
 
+        // Set once the run has been won or lost, so credits are never awarded twice.
+        private bool runEnded = false;
+
         private void Awake()
         {
-            if (Instance != null && Instance != this)
+            // Scene-scoped singleton ("latest wins"): every run lives in its own scene load, so a Retry
+            // builds a brand-new GameManager and the old one disappears with its scene.
+            // Only a duplicate in the SAME scene is removed.
+            if (Instance != null && Instance != this && Instance.gameObject.scene == gameObject.scene)
             {
                 Destroy(gameObject);
                 return;
             }
             Instance = this;
             Time.timeScale = 1f;
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
         }
 
         private void Start()
@@ -66,14 +80,14 @@ namespace HazeBuster.Core
                 }
 
                 // Pause toggle
-                if (Input.GetKeyDown(KeyCode.Escape))
+                if (Utility.InputHelper.IsPausePressed())
                 {
                     TogglePause();
                 }
             }
             else if (currentState == GameState.Paused)
             {
-                if (Input.GetKeyDown(KeyCode.Escape))
+                if (Utility.InputHelper.IsPausePressed())
                 {
                     TogglePause();
                 }
@@ -135,6 +149,8 @@ namespace HazeBuster.Core
 
         public void TriggerVictory()
         {
+            if (runEnded) return;
+            runEnded = true;
             Debug.Log("<color=green>[HAZEBUSTER] VICTORY! The Peatland Wildfire has been extinguished!</color>");
             // Award meta-currency
             MetaProgression.MetaProgressionManager.Instance?.AddEcoCredits(totalDewCollected + 100);
@@ -143,6 +159,8 @@ namespace HazeBuster.Core
 
         public void TriggerGameOver()
         {
+            if (runEnded) return;
+            runEnded = true;
             Debug.Log("<color=red>[HAZEBUSTER] Mission Failed. The haze consumed the peatland.</color>");
             // Save whatever credits the player harvested before falling
             MetaProgression.MetaProgressionManager.Instance?.AddEcoCredits(totalDewCollected);

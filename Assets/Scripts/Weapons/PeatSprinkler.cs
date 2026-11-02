@@ -1,5 +1,6 @@
 using UnityEngine;
 using HazeBuster.Upgrades;
+using HazeBuster.Utility;
 
 namespace HazeBuster.Weapons
 {
@@ -50,7 +51,7 @@ namespace HazeBuster.Weapons
                 float rad = angle * Mathf.Deg2Rad;
                 Vector2 dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
 
-                GameObject obj = Instantiate(dropletPrefab, transform.position, Quaternion.identity);
+                GameObject obj = PoolManager.Spawn(dropletPrefab, transform.position, Quaternion.identity);
                 WaterProjectile proj = obj.GetComponent<WaterProjectile>();
                 if (proj != null)
                 {

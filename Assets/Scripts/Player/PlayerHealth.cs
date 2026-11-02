@@ -15,8 +15,15 @@ namespace HazeBuster.Player
         public float baseMaxHealth = 100f;
         public float maxHealth;
         public float currentHealth;
-        public bool isInvulnerable = false;
         public float hurtInvulnerabilityDuration = 1.0f;
+
+        // Dash protection and "just got hurt" protection are tracked separately, so one of them
+        // ending never switches the other one off early.
+        private bool hurtInvulnerable = false;
+        private bool dashInvulnerable = false;
+
+        /// <summary>True while the player cannot take damage (dashing, or recovering from a hit).</summary>
+        public bool isInvulnerable => hurtInvulnerable || dashInvulnerable;
 
         [Header("Visual Feedback")]
         public SpriteRenderer characterRenderer;
@@ -52,6 +59,14 @@ namespace HazeBuster.Player
             maxHealth = baseMaxHealth + bonusHealth;
         }
 
+        /// <summary>
+        /// Called by PlayerController at the start and end of a dash.
+        /// </summary>
+        public void SetDashInvulnerable(bool value)
+        {
+            dashInvulnerable = value;
+        }
+
         public void TakeDamage(float damageAmount)
         {
             if (isInvulnerable || currentHealth <= 0) return;
@@ -80,7 +95,7 @@ namespace HazeBuster.Player
 
         private IEnumerator HurtInvulnerabilityRoutine()
         {
-            isInvulnerable = true;
+            hurtInvulnerable = true;
             float elapsed = 0f;
             float flashInterval = 0.1f;
 
@@ -104,7 +119,7 @@ namespace HazeBuster.Player
             {
                 characterRenderer.color = normalColor;
             }
-            isInvulnerable = false;
+            hurtInvulnerable = false;
         }
 
         private void Die()

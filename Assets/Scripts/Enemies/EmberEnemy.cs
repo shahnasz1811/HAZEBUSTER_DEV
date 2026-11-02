@@ -1,4 +1,5 @@
 using UnityEngine;
+using HazeBuster.Environment;
 
 namespace HazeBuster.Enemies
 {
@@ -20,7 +21,7 @@ namespace HazeBuster.Enemies
             base.Start();
             enemyName = "Airborne Ember";
             maxHealth = 15f;
-            currentHealth = maxHealth;
+            FinalizeHealth(); // applies the spawner's health multiplier
             moveSpeed = 4.2f;
             contactDamage = 10f;
             dewDropAmount = 1;

@@ -2,12 +2,13 @@ using System.Collections;
 using UnityEngine;
 using HazeBuster.Core;
 using HazeBuster.MetaProgression;
+using HazeBuster.Utility;
 
 namespace HazeBuster.Player
 {
     /// <summary>
     /// Controls the Scientist Engineer: WASD movement, mouse aiming, and high-impact dashing.
-    /// Includes upgradeable Dash systems (Hydro-Dash water trail, Steam Burst, extra charges).
+    /// Uses InputHelper to seamlessly support both New Input System and Legacy Input Manager.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
     public class PlayerController : MonoBehaviour
@@ -42,6 +43,10 @@ namespace HazeBuster.Player
         public float steamBurstRadius = 2.5f;
         public float steamBurstDamage = 25f;
 
+        [Header("Arena")]
+        [Tooltip("How close to the arena edge the player can get.")]
+        public float arenaEdgeMargin = 0.6f;
+
         private PlayerHealth playerHealth;
 
         private void Awake()
@@ -52,6 +57,22 @@ namespace HazeBuster.Player
             {
                 mainCamera = Camera.main;
             }
+
+            // Ensure Rigidbody2D is configured properly for 2D top-down
+            if (rb != null)
+            {
+                rb.bodyType = RigidbodyType2D.Dynamic;
+                rb.gravityScale = 0f;
+                rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+                // Crucial: Interpolation eliminates visual jitter between physics and render frames!
+                rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+            }
+
+            // Ensure Player is NOT a child of Ground (which would cause glitchy movement)
+            if (transform.parent != null && transform.parent.name.ToLower().Contains("ground"))
+            {
+                transform.SetParent(null);
+            }
         }
 
         private void Start()
@@ -60,7 +81,7 @@ namespace HazeBuster.Player
             ApplyMetaBonuses();
 
             currentDashCharges = maxDashCharges;
-            currentDashCooldown = baseDashCooldown;
+            // currentDashCooldown was already set (including the permanent Lab bonus) by ApplyMetaBonuses() above.
         }
 
         public void ApplyMetaBonuses()
@@ -68,7 +89,7 @@ namespace HazeBuster.Player
             float speedBonus = MetaProgressionManager.Instance != null 
                 ? MetaProgressionManager.Instance.GetMoveSpeedBonus() 
                 : 0f;
-            currentMoveSpeed = baseMoveSpeed + speedBonus;
+            currentMoveSpeed = Mathf.Max(3f, baseMoveSpeed + speedBonus);
 
             float cooldownReduction = MetaProgressionManager.Instance != null
                 ? MetaProgressionManager.Instance.GetDashCooldownReduction()
@@ -84,10 +105,8 @@ namespace HazeBuster.Player
                 return;
             }
 
-            // 1. Read Movement Input
-            moveInput.x = Input.GetAxisRaw("Horizontal");
-            moveInput.y = Input.GetAxisRaw("Vertical");
-            moveInput = moveInput.normalized;
+            // 1. Read Movement Input via Universal InputHelper
+            moveInput = InputHelper.GetMovementVector();
 
             // 2. Aim towards Mouse
             HandleMouseAiming();
@@ -95,8 +114,8 @@ namespace HazeBuster.Player
             // 3. Recharge Dash Charges
             HandleDashRecharge();
 
-            // 4. Dash Input (Spacebar or Right Mouse Button)
-            if ((Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(1)) && currentDashCharges > 0 && !isDashing)
+            // 4. Dash Input (Spacebar or Right Mouse Button or Left Shift)
+            if (InputHelper.IsDashPressed() && currentDashCharges > 0 && !isDashing)
             {
                 StartCoroutine(PerformDash());
             }
@@ -104,20 +123,42 @@ namespace HazeBuster.Player
 
         private void FixedUpdate()
         {
-            if (isDashing) return; // Velocity is handled by the dash coroutine
-            rb.linearVelocity = moveInput * currentMoveSpeed;
+            // While dashing, the dash coroutine controls the velocity.
+            if (!isDashing)
+            {
+                rb.linearVelocity = moveInput * currentMoveSpeed;
+            }
+
+            KeepInsideArena();
+        }
+
+        /// <summary>
+        /// Keeps the player inside the shared arena. Works during dashes too and needs no physics walls.
+        /// </summary>
+        private void KeepInsideArena()
+        {
+            Vector2 position = rb.position;
+            Vector2 clamped = ArenaBounds.Clamp(position, arenaEdgeMargin);
+            if (clamped != position)
+            {
+                rb.position = clamped;
+            }
         }
 
         private void HandleMouseAiming()
         {
-            if (mainCamera == null) return;
+            if (mainCamera == null)
+            {
+                mainCamera = Camera.main;
+                if (mainCamera == null) return;
+            }
 
-            Vector3 mouseScreenPos = Input.mousePosition;
+            Vector3 mouseScreenPos = InputHelper.GetMousePosition();
             Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(mouseScreenPos);
             Vector2 aimDirection = (mouseWorldPos - transform.position);
 
-            // Flip character sprite based on aim side
-            if (characterRenderer != null)
+            // Flip character sprite based on aim side (with deadzone to prevent flickering jitter)
+            if (characterRenderer != null && Mathf.Abs(aimDirection.x) > 0.25f)
             {
                 characterRenderer.flipX = aimDirection.x < 0;
             }
@@ -156,16 +197,19 @@ namespace HazeBuster.Player
             // Invulnerability during dash
             if (playerHealth != null)
             {
-                playerHealth.isInvulnerable = true;
+                playerHealth.SetDashInvulnerable(true);
             }
 
             // Dash direction (if moving, dash in movement direction; otherwise towards mouse)
             Vector2 dashDir = moveInput;
-            if (dashDir == Vector2.zero)
+            if (dashDir == Vector2.zero && mainCamera != null)
             {
-                Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+                Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(InputHelper.GetMousePosition());
                 dashDir = ((Vector2)(mouseWorldPos - transform.position)).normalized;
             }
+
+            // Fallback forward if still zero
+            if (dashDir == Vector2.zero) dashDir = Vector2.right;
 
             // Trigger Steam Burst start if unlocked
             if (hasSteamBurst)
@@ -200,7 +244,7 @@ namespace HazeBuster.Player
 
             if (playerHealth != null)
             {
-                playerHealth.isInvulnerable = false;
+                playerHealth.SetDashInvulnerable(false);
             }
 
             // Trigger Steam Burst end if unlocked
@@ -218,7 +262,6 @@ namespace HazeBuster.Player
             }
             else
             {
-                // Fallback: programmatic water trail puddle
                 GameObject puddle = new GameObject("WaterTrailPuddle");
                 puddle.transform.position = transform.position;
                 puddle.AddComponent<WaterTrail>();
@@ -229,7 +272,6 @@ namespace HazeBuster.Player
         {
             SoundManager.Instance?.PlayExplosionSound();
 
-            // Knock back and damage nearby burning enemies
             Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, steamBurstRadius);
             foreach (var col in hits)
             {

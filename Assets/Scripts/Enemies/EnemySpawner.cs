@@ -3,12 +3,14 @@ using UnityEngine;
 using HazeBuster.Core;
 using HazeBuster.Player;
 using HazeBuster.Boss;
+using HazeBuster.Utility;
 
 namespace HazeBuster.Enemies
 {
     /// <summary>
     /// Spawns fire hazards just outside the player's vision edge so they emerge from the haze.
-    /// Manages escalating survival waves and summons the Fire Boss at the climax.
+    /// Manages escalating survival waves, difficulty scaling over time, and boss awakening.
+    /// Spawn points are kept inside the shared ArenaBounds.
     /// </summary>
     public class EnemySpawner : MonoBehaviour
     {
@@ -19,10 +21,14 @@ namespace HazeBuster.Enemies
         public GameObject fireBossPrefab;
 
         [Header("Spawn Settings")]
-        public float spawnRadius = 10f; // Outside typical vision radius
-        public float baseSpawnInterval = 1.8f;
-        public float minSpawnInterval = 0.4f;
-        public int maxEnemiesAlive = 60;
+        public float spawnRadius = 12f; // Outside typical vision radius
+        public float baseSpawnInterval = 1.8f; // Interval at 00:00
+        public float minSpawnInterval = 0.35f; // Interval at climax (fast swarms)
+        public int maxEnemiesAlive = 65;
+
+        [Header("Runtime Difficulty")]
+        [Tooltip("Multiplies enemy HP as time passes (e.g. +10% every minute)")]
+        public float hpScalePerMinute = 0.12f;
 
         private Transform playerTransform;
         private PlayerVision playerVision;
@@ -31,11 +37,10 @@ namespace HazeBuster.Enemies
 
         private void Start()
         {
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
-            if (player != null)
+            playerTransform = PlayerLocator.PlayerTransform;
+            if (playerTransform != null)
             {
-                playerTransform = player.transform;
-                playerVision = player.GetComponent<PlayerVision>();
+                playerVision = playerTransform.GetComponent<PlayerVision>();
             }
         }
 
@@ -46,7 +51,7 @@ namespace HazeBuster.Enemies
                 return;
             }
 
-            // Clean up null references from defeated enemies
+            // Clean up null references from defeated/despawned enemies
             activeEnemies.RemoveAll(e => e == null);
 
             // Calculate difficulty ramp based on elapsed run time
@@ -70,44 +75,90 @@ namespace HazeBuster.Enemies
 
             // Determine spawn position just outside the player's vision circle
             float currentVision = playerVision != null ? playerVision.currentVisionRadius : 6f;
-            float spawnDist = Mathf.Max(spawnRadius, currentVision + 2.5f);
+            float spawnDist = Mathf.Max(spawnRadius, currentVision + 3.0f);
 
-            Vector2 randomCircle = Random.insideUnitCircle.normalized * spawnDist;
-            Vector3 spawnPos = playerTransform.position + (Vector3)randomCircle;
+            Vector2 spawnPos = FindSpawnPosition(playerTransform.position, spawnDist);
 
-            // Pick enemy type based on run progress
+            // Pick enemy type based on run progress (Wave timeline)
             GameObject prefabToSpawn = emberPrefab;
 
             float roll = Random.value;
-            if (runProgress > 0.6f) // Late run: Gambut & Stumps frequent
+            if (runProgress > 0.65f) // Late run: Gambut & Stumps frequent
             {
-                if (roll < 0.4f) prefabToSpawn = emberPrefab;
-                else if (roll < 0.75f) prefabToSpawn = gambutPrefab;
+                if (roll < 0.35f) prefabToSpawn = emberPrefab;
+                else if (roll < 0.70f) prefabToSpawn = gambutPrefab;
                 else prefabToSpawn = burnedStumpPrefab;
             }
-            else if (runProgress > 0.25f) // Mid run: Burned Stumps introduced
+            else if (runProgress > 0.30f) // Mid run: Burned Stumps introduced
             {
-                if (roll < 0.65f) prefabToSpawn = emberPrefab;
+                if (roll < 0.60f) prefabToSpawn = emberPrefab;
                 else prefabToSpawn = burnedStumpPrefab;
             }
-            else // Early run: mostly fast embers
+            else // Early run: fast airborne embers
+            {
+                prefabToSpawn = emberPrefab;
+            }
+
+            // If the chosen prefab was not assigned in the Inspector, fall back to an ember
+            // so the wave never goes silent.
+            if (prefabToSpawn == null)
             {
                 prefabToSpawn = emberPrefab;
             }
 
             if (prefabToSpawn != null)
             {
-                GameObject enemy = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
-                activeEnemies.Add(enemy);
+                GameObject enemyObj = Instantiate(prefabToSpawn, (Vector3)spawnPos, Quaternion.identity);
+                EnemyBase enemy = enemyObj.GetComponent<EnemyBase>();
+
+                if (enemy != null && GameManager.Instance != null)
+                {
+                    // Scale HP over time (minutes elapsed). The enemy applies this multiplier in its
+                    // own Start(), after it has set its base stats.
+                    float minutesElapsed = GameManager.Instance.currentRunTimer / 60f;
+                    enemy.healthMultiplier = 1f + (minutesElapsed * hpScalePerMinute);
+                }
+
+                activeEnemies.Add(enemyObj);
             }
+        }
+
+        /// <summary>
+        /// Picks a point on a ring around the player that lies inside the arena.
+        /// Tries a few random angles first; if the player is cornered and all of them fall
+        /// outside the arena, the last point is clamped inside instead.
+        /// </summary>
+        private static Vector2 FindSpawnPosition(Vector2 center, float distance)
+        {
+            for (int i = 0; i < 8; i++)
+            {
+                float angle = Random.value * Mathf.PI * 2f;
+                Vector2 candidate = center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * distance;
+                if (ArenaBounds.Contains(candidate, 1f))
+                {
+                    return candidate;
+                }
+            }
+
+            float fallbackAngle = Random.value * Mathf.PI * 2f;
+            Vector2 fallback = center + new Vector2(Mathf.Cos(fallbackAngle), Mathf.Sin(fallbackAngle)) * distance;
+            return ArenaBounds.Clamp(fallback, 1f);
         }
 
         public void SpawnFireBoss()
         {
-            if (fireBossPrefab == null || playerTransform == null) return;
+            if (fireBossPrefab == null)
+            {
+                Debug.LogWarning("[HAZEBUSTER] No Fire Boss prefab is assigned on the EnemySpawner, so the boss cannot appear and the run cannot be won.");
+                return;
+            }
+            if (playerTransform == null) return;
 
-            Vector3 bossSpawnPos = playerTransform.position + (Vector3.up * 8f);
-            GameObject boss = Instantiate(fireBossPrefab, bossSpawnPos, Quaternion.identity);
+            // Spawn the boss on the side of the player that has more room inside the arena.
+            Vector2 awayFromEdge = playerTransform.position.y > ArenaBounds.center.y ? Vector2.down : Vector2.up;
+            Vector2 bossPos = ArenaBounds.Clamp((Vector2)playerTransform.position + (awayFromEdge * 9f), 3f);
+
+            GameObject boss = Instantiate(fireBossPrefab, (Vector3)bossPos, Quaternion.identity);
             activeEnemies.Add(boss);
         }
     }

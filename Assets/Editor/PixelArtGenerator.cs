@@ -1,21 +1,17 @@
 using System.IO;
 using UnityEngine;
-#if UNITY_EDITOR
 using UnityEditor;
-#endif
 
-namespace HazeBuster.Utility
+namespace HazeBuster.Editor
 {
     /// <summary>
-    /// Utility created specifically for Art & Design students!
+    /// Unity Editor Utility created specifically for Art & Design students!
     /// Generates clean, colorful 16x16 and 32x32 retro pixel-art placeholder sprites
-    /// (Scientist, Water Projectile, Dew, Ember, Burned Stump, Gambut, Fire Boss, etc.)
-    /// directly into your Assets/Sprites folder with one click!
-    /// You can play the game immediately and replace these sprites with your own art whenever you want.
+    /// directly into your Assets/Sprites folder.
+    /// Access via: HazeBuster -> Generate Pixel Art Placeholders
     /// </summary>
     public static class PixelArtGenerator
     {
-#if UNITY_EDITOR
         [MenuItem("HazeBuster/Generate Pixel Art Placeholders")]
         public static void GenerateAllSprites()
         {
@@ -35,10 +31,12 @@ namespace HazeBuster.Utility
             SaveSprite(CreateBurningGroundSprite(), folderPath + "/BurningGround.png");
             SaveSprite(CreateFoamBombSprite(), folderPath + "/FoamBomb.png");
             SaveSprite(CreateFoamPuddleSprite(), folderPath + "/FoamPuddle.png");
+            SaveSprite(CreatePeatGroundSprite(), folderPath + "/PeatGround.png");
 
             AssetDatabase.Refresh();
             ConfigureImportSettings(folderPath);
 
+            EditorUtility.DisplayDialog("HAZEBUSTER", "Success! All 10 Pixel Art placeholder sprites have been generated in Assets/Sprites!", "Awesome!");
             Debug.Log("<color=green>[HAZEBUSTER] All 10 Pixel Art placeholder sprites generated successfully in Assets/Sprites!</color>");
         }
 
@@ -64,7 +62,6 @@ namespace HazeBuster.Utility
                 }
             }
         }
-#endif
 
         // 1. Scientist Engineer (16x16 pixel art)
         public static Texture2D CreateScientistSprite()
@@ -250,6 +247,25 @@ namespace HazeBuster.Utility
             FillCircle(tex, 12, 12, 10, foam);
             FillCircle(tex, 9, 13, 3, bubble);
             FillCircle(tex, 15, 10, 4, bubble);
+
+            tex.Apply();
+            return tex;
+        }
+
+        // 11. Peat Ground Tile (16x16)
+        public static Texture2D CreatePeatGroundSprite()
+        {
+            Texture2D tex = CreateBaseTexture(16, 16);
+            Color basePeat = new Color(0.17f, 0.12f, 0.09f, 1f);
+            Color darkFibers = new Color(0.12f, 0.08f, 0.06f, 1f);
+            Color lightDirt = new Color(0.24f, 0.17f, 0.13f, 1f);
+            Color mossSpeck = new Color(0.21f, 0.27f, 0.15f, 1f);
+
+            FillRect(tex, 0, 0, 16, 16, basePeat);
+            tex.SetPixel(2, 3, darkFibers); tex.SetPixel(3, 3, darkFibers);
+            tex.SetPixel(10, 8, darkFibers); tex.SetPixel(11, 8, darkFibers);
+            tex.SetPixel(7, 5, lightDirt); tex.SetPixel(13, 3, lightDirt);
+            tex.SetPixel(4, 9, mossSpeck); tex.SetPixel(11, 2, mossSpeck);
 
             tex.Apply();
             return tex;

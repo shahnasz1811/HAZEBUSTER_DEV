@@ -1,0 +1,154 @@
+================================================================================
+HAZEBUSTER — LEVEL-UP UPGRADE MENU & GAMEPLAY TUNING GUIDE
+(Prepared for Art & Design Students — Zero Coding Experience Needed!)
+================================================================================
+
+TABLE OF CONTENTS:
+1. HOW TO SET UP THE LEVEL-UP & HUD UI (1-CLICK OR MANUAL)
+2. HOW THE LEVEL-UP PAUSE & 3-CARD UPGRADE SYSTEM WORKS
+3. EXP TIERS & THE NEW PICKUP RANGE MECHANIC
+4. HOW DIFFICULTY SCALING OVER TIME WORKS IN HAZEBUSTER
+5. RECOMMENDED TUNING VALUES (SPEED, SIZE & COMBAT FEEL)
+
+================================================================================
+1. HOW TO SET UP THE LEVEL-UP & HUD UI (1-CLICK METHOD)
+================================================================================
+
+We built an automatic UI builder directly inside your Unity Editor!
+
+STEP-BY-STEP:
+1. Open your HAZEBUSTER project in Unity.
+2. In Unity's top menu bar, click:
+   HazeBuster -> Create Complete Game UI & Level-Up Menu
+3. That is literally it! 
+   It will instantly build:
+   - A Canvas (HUD_Canvas) scaled to 1920x1080.
+   - EventSystem (for mouse clicking).
+   - Top-Left: Health Bar (Red) + HP numbers.
+   - Top-Center: EXP Bar (Blue) + Level Text ("Lv. 1") + Survival Clock ("00:00").
+   - Bottom-Left: Dash charge indicator ("Dash: 1 / 1").
+   - Top-Right: Dew counter ("Dew: 0").
+   - The Level-Up Modal with 3 interactive Upgrade Cards!
+   - Everything is already wired into the _UIManager component.
+
+================================================================================
+2. HOW THE LEVEL-UP PAUSE & 3-CARD UPGRADE SYSTEM WORKS
+================================================================================
+
+When you absorb enough Morning Dew drops to fill your blue EXP bar:
+1. Level-Up Event Triggers:
+   - Your level increases (Lv. 1 -> Lv. 2).
+   - A cheerful 8-bit fanfare chime plays.
+   - GameManager automatically sets the game state to "LevelingUp".
+   - Time.timeScale is instantly set to 0.0 (THE GAME FULLY PAUSES!).
+     * All burning enemies freeze in place.
+     * All fireballs, embers, and projectiles pause mid-air.
+     * The survival clock pauses.
+     * Player movement is locked.
+
+2. The 3 Upgrade Cards Appear:
+   - The Level-Up Modal opens over the screen with a dark translucent haze backdrop.
+   - UpgradeManager rolls 3 random valid perks from your pool, such as:
+     * "Rapid Pressure Valve" (+25% Water Gun firing speed)
+     * "Dual Stream Splitter" (+1 extra water stream in fan spread)
+     * "Hydro-Vacuum Tank" (+1.2m Dew Pickup Range!)
+     * "Halogen High-Beam" (+2.0m Vision Light circle through haze)
+     * "Hydro-Dash Trail" (Dashing quenches burning peat on the ground)
+     * "Deploy Peat Sprinkler" (Unlocks the 360-degree rotating nozzle)
+     * "Chemical Foam Mortar" (Unlocks the extinguishing foam launcher)
+
+3. Selection & Unpause:
+   - Hover your mouse over any of the 3 cards (the card highlights).
+   - Click your chosen card!
+   - The selected upgrade is permanently added to your run.
+   - The modal closes.
+   - Time.timeScale is restored to 1.0 (GAME UNPAUSES SMOOTHLY!).
+
+================================================================================
+3. EXP TIERS & THE NEW PICKUP RANGE MECHANIC
+================================================================================
+
+In response to your feedback, EXP drops are NO LONGER automatically vacuumed
+into the player from across the screen!
+
+A. TIGHT BASE PICKUP RANGE:
+   - The base pickup radius is now set to a tight 1.2 meters (you have to walk
+     over to or touch the dew drop to collect it).
+   - Defeated embers and stumps "pop" outward slightly onto the peat floor
+     and rest there waiting for you.
+
+B. IN-RUN PICKUP UPGRADES:
+   - When leveling up, you can now choose the "Hydro-Vacuum Tank" upgrade!
+   - Each time you take it, your pickup circle expands (+1.2m per rank).
+   - By late game, you can upgrade it to pull in drops from meters away!
+
+C. 3-TIER VISUAL DEW DROPS:
+   - Tier 1: Small Dew Drop (Cyan / Light Blue) = 1 EXP
+     (Dropped by common airborne embers)
+   - Tier 2: Medium Dew Crystal (Emerald Green / Larger) = 5 EXP
+     (Dropped by mid-game subterranean Gambut monsters)
+   - Tier 3: Large Pure Moisture Core (Golden / Glowing) = 20 EXP
+     (Dropped by heavy charred Burned Stumps and the Wildfire Boss!)
+
+================================================================================
+4. HOW DIFFICULTY SCALING OVER TIME WORKS IN HAZEBUSTER
+================================================================================
+
+Just like in "Everything is a Crab" and "Vampire Survivors", the survival
+run operates on an escalating timeline:
+
+--------------------------------------------------------------------------------
+TIMELINE PHASE        | ENEMY COMPOSITION           | DIFFICULTY BEHAVIOR
+--------------------------------------------------------------------------------
+Phase 1: Spark Spotting| 100% Airborne Embers        | Spawn every 1.8s.
+(0:00 - 1:30)         | (Fast, low HP, 1 EXP drop)  | Easy to kite and douse.
+--------------------------------------------------------------------------------
+Phase 2: Smoldering Stumps| 60% Embers, 40% Stumps   | Spawn interval drops to 1.2s.
+(1:30 - 3:30)         | Heavy charred tree tanks    | Stumps emit smoke puffs that
+                      | (High HP, drops 20 EXP drop)| block vision light.
+--------------------------------------------------------------------------------
+Phase 3: Gambut Inferno| 30% Embers, 35% Stumps,     | Spawn interval drops to 0.7s.
+(3:30 - 5:00)         | 35% Subterranean Gambut     | Ground becomes littered with
+                      | (Leaves burning peat ground)| burning soil; requires dashing!
+--------------------------------------------------------------------------------
+Climax: Wildfire Nexus | MEGA FIRE BOSS SPAWNS!      | Spawn interval drops to 0.35s.
+(5:00 mark)           | Multi-phase boss battle     | Constant ember storm + fire
+                      | Fire breath & Fireball Novas| nova rings. Victory on kill!
+--------------------------------------------------------------------------------
+
+HP SCALING:
+Every 60 seconds that passes, all newly spawned enemies gain +12% maximum health,
+simulating hotter, drier drought conditions in the peatland!
+
+================================================================================
+5. RECOMMENDED TUNING VALUES (SIZE, SPEED & COMBAT FEEL)
+================================================================================
+
+To achieve the punchy, satisfying feel of "Everything is a Crab":
+
+A. PLAYER CHARACTER:
+   - Move Speed: 5.5 to 6.0 units/sec (fast, snappy, responsive).
+   - Dash Speed: 16 units/sec over 0.2s duration.
+   - Dash Cooldown: 1.5s base (reduced by upgrades).
+   - Sprite Scale: (1.0, 1.0, 1.0).
+
+B. WATER GUN (PRIMARY WEAPON):
+   - Projectile Speed: 15.0 units/sec (fast, straight water jet).
+   - Base Fire Rate: 2.5 shots/sec (feels like continuous pressurized squirts).
+   - Base Damage: 15 HP (extinguishes early embers in 1 shot).
+   - Knockback Force: 6.0 (visibly pushes burning hazards backward).
+
+C. ENEMIES:
+   - Ember (Swarmer): Speed 3.6, HP 15 (fast, but slower than player's 5.5 speed).
+   - Burned Stump (Tank): Speed 1.2, HP 80 (slow, intimidating, takes 5-6 shots).
+   - Gambut (Creeper): Speed 2.0, HP 45 (leaves burning floor hazards).
+
+D. MAIN CAMERA:
+   - Projection: Orthographic
+   - Size: 6.5 to 7.0 (gives a great panoramic view of the dark hazy forest).
+   - Smooth Time in CameraFollow.cs: 0.10 (buttery smooth camera glide).
+
+================================================================================
+You're all set! Open Unity, click "HazeBuster -> Create Complete Game UI & Level-Up Menu",
+press Play, and enjoy your new leveling & pausing roguelite loop!
+================================================================================

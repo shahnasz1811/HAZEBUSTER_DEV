@@ -4,6 +4,7 @@ using UnityEngine;
 using HazeBuster.Core;
 using HazeBuster.Enemies;
 using HazeBuster.Environment;
+using HazeBuster.Utility;
 
 namespace HazeBuster.Boss
 {
@@ -40,6 +41,7 @@ namespace HazeBuster.Boss
         {
             base.Awake();
             Instance = this;
+            despawnWhenFar = false; // the boss must never vanish when the player runs far away
         }
 
         protected override void Start()
@@ -147,7 +149,7 @@ namespace HazeBuster.Boss
                 float rad = angle * Mathf.Deg2Rad;
                 Vector2 dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
 
-                GameObject fb = Instantiate(fireballPrefab, transform.position, Quaternion.identity);
+                GameObject fb = PoolManager.Spawn(fireballPrefab, transform.position, Quaternion.identity);
                 FireProjectile fp = fb.GetComponent<FireProjectile>();
                 if (fp != null)
                 {
@@ -171,7 +173,7 @@ namespace HazeBuster.Boss
                 if (playerTransform == null) break;
                 Vector2 dir = ((Vector2)(playerTransform.position - transform.position)).normalized;
 
-                GameObject fb = Instantiate(fireballPrefab, transform.position, Quaternion.identity);
+                GameObject fb = PoolManager.Spawn(fireballPrefab, transform.position, Quaternion.identity);
                 FireProjectile fp = fb.GetComponent<FireProjectile>();
                 if (fp != null)
                 {
