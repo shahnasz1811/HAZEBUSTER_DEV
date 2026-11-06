@@ -172,7 +172,7 @@ MonoBehaviour:
   enemyName: Fire Hazard
   maxHealth: 30
   currentHealth: 0
-  moveSpeed: 1
+  moveSpeed: 0.1
   contactDamage: 2
   dewDropAmount: 1
   healthMultiplier: 1
@@ -182,5 +182,5 @@ MonoBehaviour:
   hurtColor: {r: 0, g: 1, b: 1, a: 1}
   despawnWhenFar: 1
   despawnDistance: 35
-  wobbleFrequency: 2
-  wobbleAmplitude: 1.2
+  wobbleFrequency: 0.01
+  wobbleAmplitude: 0.14
