@@ -53,6 +53,9 @@ namespace HazeBuster.Player
         {
             rb = GetComponent<Rigidbody2D>();
             playerHealth = GetComponent<PlayerHealth>();
+
+            // Slanted camera: draw the character upright so it is not squashed with the ground.
+            SlantedPerspective.MakeUpright(gameObject);
             if (mainCamera == null)
             {
                 mainCamera = Camera.main;
@@ -154,8 +157,9 @@ namespace HazeBuster.Player
             }
 
             Vector3 mouseScreenPos = InputHelper.GetMousePosition();
-            Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(mouseScreenPos);
-            Vector2 aimDirection = (mouseWorldPos - transform.position);
+            // Where the cursor points on the ground (a tilted camera cannot use ScreenToWorldPoint for this).
+            Vector2 mouseGroundPos = SlantedPerspective.ScreenToGround(mainCamera, mouseScreenPos, transform.position);
+            Vector2 aimDirection = mouseGroundPos - (Vector2)transform.position;
 
             // Flip character sprite based on aim side (with deadzone to prevent flickering jitter)
             if (characterRenderer != null && Mathf.Abs(aimDirection.x) > 0.25f)
@@ -204,8 +208,8 @@ namespace HazeBuster.Player
             Vector2 dashDir = moveInput;
             if (dashDir == Vector2.zero && mainCamera != null)
             {
-                Vector3 mouseWorldPos = mainCamera.ScreenToWorldPoint(InputHelper.GetMousePosition());
-                dashDir = ((Vector2)(mouseWorldPos - transform.position)).normalized;
+                Vector2 mouseGroundPos = SlantedPerspective.ScreenToGround(mainCamera, InputHelper.GetMousePosition(), transform.position);
+                dashDir = (mouseGroundPos - (Vector2)transform.position).normalized;
             }
 
             // Fallback forward if still zero

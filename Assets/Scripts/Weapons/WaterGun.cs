@@ -62,8 +62,9 @@ namespace HazeBuster.Weapons
 
             if (projectilePrefab == null) return;
 
-            Vector3 mousePos = mainCamera.ScreenToWorldPoint(InputHelper.GetMousePosition());
-            Vector2 baseDirection = ((Vector2)(mousePos - firePoint.position)).normalized;
+            // Where the cursor points on the ground (a tilted camera cannot use ScreenToWorldPoint for this).
+            Vector2 mouseGroundPos = SlantedPerspective.ScreenToGround(mainCamera, InputHelper.GetMousePosition(), firePoint.position);
+            Vector2 baseDirection = (mouseGroundPos - (Vector2)firePoint.position).normalized;
 
             // Multi-shot fan calculations
             float startAngle = -(spreadAngle * (projectileCount - 1)) / 2f;

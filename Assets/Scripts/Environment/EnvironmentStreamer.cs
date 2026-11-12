@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using HazeBuster.Art;
 using HazeBuster.Utility;
 
 namespace HazeBuster.Environment
@@ -44,28 +45,26 @@ namespace HazeBuster.Environment
         public int loadMarginChunks = 1;
 
         [Header("Decor (the look of the peatland)")]
-        [Tooltip("Props scattered over the world. Leave empty to use generated placeholders.")]
+        [Tooltip("Props scattered over the world. Leave empty to use the Art Library's props, or generated placeholders.")]
         public Sprite[] decorSprites;
         public int minDecorPerChunk = 3;
         public int maxDecorPerChunk = 7;
 
-        [Tooltip("Smallest and largest prop width, counted in ground tiles. This follows the ground tile size, so it stays right if you change the sprite pixels per unit.")]
-        public Vector2 decorSizeInTiles = new Vector2(1.5f, 5f);
+        [Tooltip("Smallest and largest prop HEIGHT, counted in character heights (the player's height). Props stay in proportion with the characters whatever size your art has.")]
+        public Vector2 decorHeightInCharacters = new Vector2(0.7f, 2.5f);
         public int decorSortingOrder = -5;
 
         [Header("Memory (changes the player makes)")]
-        [Tooltip("Leave empty to use generated placeholders.")]
+        [Tooltip("Leave empty to use the Art Library's marks, or generated placeholders.")]
         public Sprite restoredMarkSprite;
         public Sprite scorchedMarkSprite;
-        public float markSizeInTiles = 4f;
+        [Tooltip("Width of a ground mark, counted in character heights.")]
+        public float markSizeInCharacters = 4f;
 
         [Tooltip("Marks kept per chunk. When full, the oldest one fades from memory.")]
         public int maxMarksPerChunk = 40;
         public int markSortingOrder = -8;
 
-        [Header("Scale")]
-        [Tooltip("0 = read it from the InfiniteGround tile size.")]
-        public float tileSize = 0f;
 
         private struct Mark
         {
@@ -130,14 +129,6 @@ namespace HazeBuster.Environment
             BuildPlaceholderSprites();
         }
 
-        private void Start()
-        {
-            if (tileSize <= 0.0001f)
-            {
-                InfiniteGround ground = FindFirstObjectByType<InfiniteGround>();
-                tileSize = (ground != null && ground.tileSize > 0.0001f) ? ground.tileSize : 1f;
-            }
-        }
 
         private void OnDestroy()
         {
@@ -155,7 +146,7 @@ namespace HazeBuster.Environment
 
         private void LateUpdate()
         {
-            if (tileSize <= 0.0001f || chunkSize <= 0.01f) return;
+            if (!WorldScale.IsReady || chunkSize <= 0.01f) return;
 
             if (cam == null) cam = Camera.main;
 
@@ -164,9 +155,12 @@ namespace HazeBuster.Environment
             float halfHeight;
             if (cam != null && cam.orthographic)
             {
-                center = cam.transform.position;
-                halfHeight = cam.orthographicSize;
-                halfWidth = halfHeight * cam.aspect;
+                // The ground point in the middle of the screen (not the camera's own position: a slanted camera sits back from it).
+                center = SlantedPerspective.ViewCenterOnGround(cam);
+                // A slanted camera sees more ground vertically than orthographicSize alone.
+                Vector2 visible = SlantedPerspective.VisibleHalfExtents(cam);
+                halfHeight = visible.y;
+                halfWidth = visible.x;
             }
             else
             {
@@ -250,15 +244,16 @@ namespace HazeBuster.Environment
                     float x = originX + ((float)rng.NextDouble() * chunkSize);
                     float y = originY + ((float)rng.NextDouble() * chunkSize);
                     Sprite sprite = decorSprites[rng.Next(decorSprites.Length)];
-                    float widthInTiles = Mathf.Lerp(decorSizeInTiles.x, decorSizeInTiles.y, (float)rng.NextDouble());
+                    float heightInCharacters = Mathf.Lerp(decorHeightInCharacters.x, decorHeightInCharacters.y, (float)rng.NextDouble());
                     bool flip = rng.Next(2) == 0;
                     float shade = Mathf.Lerp(0.7f, 1f, (float)rng.NextDouble());
 
                     if (sprite == null) continue;
 
                     SpriteRenderer sr = Acquire();
-                    Place(sr, sprite, new Vector2(x, y), widthInTiles * tileSize, 0f, flip,
+                    Place(sr, FeetSprite(sprite), new Vector2(x, y), heightInCharacters * WorldScale.CharacterHeight, true, 0f, flip,
                         new Color(shade, shade, shade, 1f), decorSortingOrder);
+                    SlantedPerspective.SetUpright(sr, true); // props stand up; ground marks stay flat
                     used.Add(sr);
                 }
             }
@@ -274,8 +269,9 @@ namespace HazeBuster.Environment
                     if (sprite == null) continue;
 
                     SpriteRenderer sr = Acquire();
-                    Place(sr, sprite, mark.position, markSizeInTiles * tileSize, mark.rotation, false,
+                    Place(sr, sprite, mark.position, markSizeInCharacters * WorldScale.CharacterHeight, false, mark.rotation, false,
                         Color.white, markSortingOrder);
+                    SlantedPerspective.SetUpright(sr, false);
                     used.Add(sr);
                 }
             }
@@ -308,7 +304,7 @@ namespace HazeBuster.Environment
 
         private void AddMarkInternal(Vector2 position, EnvironmentMarkType type)
         {
-            if (tileSize <= 0.0001f) return;
+            if (!WorldScale.IsReady) return;
 
             Vector2Int key = ToChunk(position);
             List<Mark> list;
@@ -319,7 +315,7 @@ namespace HazeBuster.Environment
             }
 
             // A new mark covers an older one underneath it, so patches never pile up.
-            float replaceRadius = markSizeInTiles * tileSize * 0.5f;
+            float replaceRadius = markSizeInCharacters * WorldScale.CharacterHeight * 0.5f;
             float replaceSqr = replaceRadius * replaceRadius;
             for (int i = list.Count - 1; i >= 0; i--)
             {
@@ -370,7 +366,7 @@ namespace HazeBuster.Environment
             idle.Push(sr);
         }
 
-        private static void Place(SpriteRenderer sr, Sprite sprite, Vector2 position, float worldWidth,
+        private static void Place(SpriteRenderer sr, Sprite sprite, Vector2 position, float worldSize, bool sizeByHeight,
                                   float rotation, bool flipX, Color color, int sortingOrder)
         {
             sr.sprite = sprite;
@@ -382,11 +378,29 @@ namespace HazeBuster.Environment
             t.position = new Vector3(position.x, position.y, 0f);
             t.rotation = Quaternion.Euler(0f, 0f, rotation);
 
-            float spriteWidth = sprite.bounds.size.x;
-            float scale = spriteWidth > 0.0001f ? worldWidth / spriteWidth : 1f;
+            float spriteSize = sizeByHeight ? sprite.bounds.size.y : sprite.bounds.size.x;
+            float scale = spriteSize > 0.0001f ? worldSize / spriteSize : 1f;
             t.localScale = new Vector3(scale, scale, 1f);
 
             sr.gameObject.SetActive(true);
+        }
+
+        // Props stand on the ground: the same picture, with its pivot at the bottom centre.
+        private readonly Dictionary<Sprite, Sprite> feetSprites = new Dictionary<Sprite, Sprite>();
+
+        private Sprite FeetSprite(Sprite source)
+        {
+            Sprite result;
+            if (feetSprites.TryGetValue(source, out result) && result != null)
+            {
+                return result;
+            }
+
+            result = Sprite.Create(source.texture, source.rect, new Vector2(0.5f, 0f), source.pixelsPerUnit, 0, SpriteMeshType.FullRect);
+            result.name = source.name + " (feet)";
+            feetSprites[source] = result;
+            generated.Add(result);
+            return result;
         }
 
         /// <summary>Mixes the world seed and the chunk coordinates into one random seed.</summary>
@@ -407,18 +421,33 @@ namespace HazeBuster.Environment
 
         private void BuildPlaceholderSprites()
         {
+            ArtLibrary library = ArtLibrary.Instance;
+
+            // Your own art first (this component, then the Art Library), generated placeholders last.
             if (decorSprites == null || decorSprites.Length == 0)
             {
-                decorSprites = new Sprite[]
+                if (library != null && library.props != null && library.props.Length > 0)
                 {
-                    MakeSprite(0), // rock
-                    MakeSprite(1), // charred log
-                    MakeSprite(2), // fern tuft
-                    MakeSprite(3)  // ash patch
-                };
+                    decorSprites = library.props;
+                }
+                else
+                {
+                    decorSprites = new Sprite[]
+                    {
+                        MakeSprite(0), // rock
+                        MakeSprite(1), // charred log
+                        MakeSprite(2)  // fern tuft
+                    };
+                }
             }
-            if (restoredMarkSprite == null) restoredMarkSprite = MakeSprite(4);
-            if (scorchedMarkSprite == null) scorchedMarkSprite = MakeSprite(5);
+            if (restoredMarkSprite == null)
+            {
+                restoredMarkSprite = (library != null && library.restoredMark != null) ? library.restoredMark : MakeSprite(4);
+            }
+            if (scorchedMarkSprite == null)
+            {
+                scorchedMarkSprite = (library != null && library.scorchedMark != null) ? library.scorchedMark : MakeSprite(5);
+            }
         }
 
         private Sprite MakeSprite(int kind)

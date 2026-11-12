@@ -4,8 +4,9 @@ A 2D top-down **action roguelite** about pushing back peatland haze. You play an
 
 | | |
 | :--- | :--- |
-| Genre | 2D top-down action roguelite / survival |
+| Genre | 2D action roguelite / survival, slanted orthographic camera (see [Camera perspective](#camera-perspective-slanted-orthographic-hell-maiden-style)) |
 | Engine | Unity 6000.4.2f1 |
+| Camera | Orthographic, tilted back 50 degrees by default (`CameraFollow`). Gameplay stays on the flat XY plane with Rigidbody2D |
 | Render pipeline | Built-in (2D template). The URP package is **not** installed |
 | Input | Input System 1.19.0 + legacy Input Manager (Active Input Handling = Both) |
 | UI | uGUI with legacy `Text` |
@@ -69,7 +70,7 @@ Explore smoldering peatland (haze limits vision)
 
 ```
 Assets/
-  Editor/             ArenaSetupTool, PixelArtGenerator, TagSetup, UISetupTool
+  Editor/             ArenaSetupTool, PixelArtGenerator, SlantedPerspectiveTool, TagSetup, UISetupTool
   Prefabs/
     Enemies/          Ember, BurnedStump, Gambut
     Weapons/          WaterProjectile
@@ -84,9 +85,11 @@ Assets/
     Player/           PlayerController, PlayerHealth, PlayerExperience, PlayerVision, WaterTrail
     UI/               UIManager, UpgradeCardUI
     Upgrades/         UpgradeType, UpgradeData, UpgradeManager
-    Utility/          ArenaBounds, CameraFollow, InfiniteGround, InputHelper, PlayerLocator, PoolManager
+    Utility/          ArenaBounds, CameraFollow, InfiniteGround, InputHelper, PlayerLocator, PoolManager,
+                      SlantedPerspective
     Weapons/          WeaponBase, WaterGun, WaterProjectile, PeatSprinkler,
                       FoamBombLauncher, FoamBombProjectile, FoamPuddle
+  Shaders/Resources/  HazeBusterSpriteBillboard (draws sprites upright for the slanted camera)
   Sprites/            11 generated placeholder PNGs
 ```
 
@@ -108,6 +111,84 @@ Assets/
 | UI | HUD (HP, EXP, level, timer, dash, dew) and level-up modal. `UIManager` has fields for the boss bar, game over, victory and shop panels, but no tool builds them yet. |
 | World | Endless. `InfiniteGround` is one tiled sprite that follows the camera in whole-tile steps and resizes itself to the view, so the tiles stay locked to one fixed grid. `EnvironmentStreamer` builds props around the camera in 10 x 10 unit chunks and creates itself if the scene has none. Each chunk is generated from the world seed and its coordinates, so a place looks the same when you come back (the seed is random each run by default). Fires you put out leave a restored patch and fires that burn out leave a scorched patch. These marks are stored per chunk (40 per chunk, oldest dropped) and come back when the chunk loads again. Nothing is saved between runs. Placeholder props are generated until you assign sprites. |
 | Audio | Procedural 8-bit sound effects, generated once and cached. No audio files needed. |
+
+---
+
+## Camera perspective: slanted orthographic (Hell Maiden style)
+
+> **Status (12 Nov 2026): written, not compiled or play-tested.** Like the 2 Nov work, none of this has been through the Unity compiler. Open the project, let it compile, and read the Console before anything else.
+
+### The reference: Hell Maiden
+
+*Hell Maiden* (AstralShift, Windows, in development) is an action horde-survival deckbuilder inspired by Dante's Divine Comedy. [GamesRadar's preview](https://www.gamesradar.com/games/roguelike/dantes-inferno-with-90s-sailor-moon-aesthetics-got-me-to-play-this-vampire-survivors-like-demo-in-steam-next-fest-and-the-second-i-realized-it-was-a-deckbuilding-roguelike-with-hades-storytelling-i-couldnt-smash-the-wishlist-button-fast-enough) says you steer the hero from an isometric viewpoint while she attacks automatically about once a second. That is the same loop as HAZEBUSTER, drawn from a slanted camera instead of straight down.
+
+**What I could not find:** the exact camera angle, zoom or engine are not published in anything I found, and I could not watch gameplay footage in this session. The default tilt (50 degrees) is therefore an estimate. Compare it with Hell Maiden screenshots and tune `Tilt Angle` by eye.
+
+### What this look is made of
+
+This is my breakdown of the style, based on the description above and common practice for this kind of camera. It is not taken from Hell Maiden's files.
+
+| Ingredient | What it does | Where |
+| :--- | :--- | :--- |
+| Orthographic camera tilted back | The ground is seen at a slant: squashed vertically by cos(tilt), but nothing shrinks with distance | `CameraFollow` |
+| Gameplay stays flat | Movement, colliders, spawning and projectiles still work on the XY plane, so none of the game code had to change | (unchanged) |
+| Upright sprites | Characters, enemies, pickups and props stand up and face the camera instead of being squashed with the ground. Done in a shader, so no object is ever rotated and Rigidbody2D, colliders and `flipX` keep working | `HazeBusterSpriteBillboard.shader`, `SlantedPerspective.MakeUpright` |
+| Mouse aims at the ground | The cursor is projected onto the ground plane. `Camera.ScreenToWorldPoint` is wrong for a tilted camera | `SlantedPerspective.ScreenToGround` |
+| Visible-ground maths | A tilted camera sees `orthographicSize / cos(tilt)` of ground vertically and looks at a point in front of itself, not at its own position. The endless ground and prop streamer use this | `VisibleHalfExtents`, `ViewCenterOnGround` |
+
+### How to use it
+
+1. Open the project in Unity 6000.4.2f1 and let it compile.
+2. Press Play. The view is applied by itself: if the Main Camera has no `CameraFollow`, one is added when the scene loads.
+3. Optional, to preview in the Scene without playing: **HazeBuster > Camera > Apply Slanted Orthographic View**. **HazeBuster > Camera > Reset To Flat 2D View** goes back. Characters only stand upright while playing, and the ground sprite only resizes while playing.
+4. Tune on the camera's `CameraFollow` component. Changes made while playing apply immediately.
+
+| Setting | Default | Notes |
+| :--- | :-: | :--- |
+| `Slanted View` | on | Off = the old flat top-down camera and normal sprites |
+| `Tilt Angle` | 50 | Degrees away from straight down |
+| `Camera Distance` | 20 | Only has to keep the scene inside the clip planes |
+
+| Tilt | Look | Ground squash (cos) |
+| :-: | :--- | :-: |
+| 0 | Flat top-down (old view) | 1.00 |
+| 35 | Gentle slant | 0.82 |
+| 50 | 3/4 view (default) | 0.64 |
+| 60 | True 2:1 isometric ground | 0.50 |
+
+At tilt 50, orthographic size 5 and a 16:9 window the camera sees about 17.8 x 15.6 ground units (flat view: 17.8 x 10), so you see more up and down.
+
+### What changed
+
+| File | Change |
+| :--- | :--- |
+| `Utility/SlantedPerspective.cs` | New. Tilt state, ground maths, mouse-to-ground, upright-sprite helpers, adds `CameraFollow` to the main camera if missing |
+| `Shaders/Resources/HazeBusterSpriteBillboard.shader` | New. Built-in pipeline sprite shader that faces the camera. Loaded from `Resources` so it is also in builds |
+| `Editor/SlantedPerspectiveTool.cs` | New. The two **HazeBuster > Camera** menu items |
+| `Utility/CameraFollow.cs` | Rewritten. Tilted orthographic follow, arena clamp measured on the visible ground, live tuning. `Offset` is now only used when Slanted View is off |
+| `Utility/InfiniteGround.cs` | Rewritten. Follows the ground point in the middle of the screen and covers the taller visible area |
+| `Environment/EnvironmentStreamer.cs` | Chunks load around the visible ground. Props stand upright, ground marks stay flat |
+| `Player/PlayerController.cs`, `Weapons/WaterGun.cs`, `Weapons/FoamBombLauncher.cs` | Aim and dash direction use the ground point under the cursor. The player is drawn upright |
+| `Enemies/EnemyBase.cs`, `Environment/DewPickup.cs` | Enemies (and the boss) and dew are drawn upright |
+
+### Things to know
+
+- **Not compiled.** The shader was written by hand for the Built-in pipeline. If sprites turn pink or the Console shows a shader error, the shader is the first place to look.
+- **Flat on purpose:** water droplets, fireballs, burning ground, foam puddles, the Hydro-Dash trail and ground marks stay lying on the ground. That is right for things that travel along or sit on the floor. The billboard shader ignores Z rotation, so do not use it on those.
+- **Weapon sprites:** a sprite on the `WeaponMount` child would be drawn upright and would not turn to aim. No placeholder has one today. If you add one, keep it on the flat material or give it its own handling.
+- **Pivots:** an upright sprite stands around its pivot, which is the object's position. With the usual centre pivot, a character's feet sit half a sprite below its collider centre. Setting the pivot to Bottom puts the feet on the collider, and is the better setup for this view.
+- **Depth sorting:** Unity sorts by Order in Layer first, so props (Decor Sorting Order -5) always draw behind characters. For a character to walk behind a tree, give both the same Order in Layer. Equal-order sprites should then sort by depth, which here follows world Y. Check this in play.
+- **Feel:** moving up and down covers 0.64 of the screen distance that moving sideways does, because the ground is foreshortened. Enemies move in the same ground space, so the game stays consistent.
+- **Spawn ring:** `EnemySpawner.spawnRadius` is 12, and the corners of the new view are about 11.8 units from the centre at 16:9. If enemies pop in at the corners, raise it to about 13 on the EnemySpawner component.
+- **Arcs:** the foam bomb arc and the dew pop hop along world Y, which on a tilted ground reads as moving over the floor rather than rising. This is an art fix for later (draw a separate height offset).
+- **Lighting:** the limited-vision light still needs URP 2D lights and is not part of this change.
+
+### Next steps
+
+1. Open Unity, let it compile, and fix any Console errors from the new scripts or the shader.
+2. Play: check that the aim hits the cursor, nothing looks squashed, and there is no seam or gap at the edge of the ground when you walk far in every direction.
+3. Compare with Hell Maiden screenshots and tune `Tilt Angle`. Orthographic size 5 with 100 pixels per unit still makes characters tiny (open issue 8).
+4. Add pivots at the feet, a soft oval shadow under each character, and matching Order in Layer for depth sorting.
 
 ---
 

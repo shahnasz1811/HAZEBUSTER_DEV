@@ -46,6 +46,9 @@ namespace HazeBuster.Environment
             }
             Collider2D col = GetComponent<Collider2D>();
             col.isTrigger = true;
+
+            // Slanted camera: draw the pickup upright so it is not squashed with the ground.
+            SlantedPerspective.MakeUpright(gameObject);
         }
 
         private void Start()

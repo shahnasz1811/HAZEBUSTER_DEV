@@ -49,6 +49,9 @@ namespace HazeBuster.Enemies
         {
             rb = GetComponent<Rigidbody2D>();
             rb.gravityScale = 0f;
+
+            // Slanted camera: draw the enemy upright so it is not squashed with the ground.
+            SlantedPerspective.MakeUpright(gameObject);
             if (spriteRenderer == null)
             {
                 spriteRenderer = GetComponentInChildren<SpriteRenderer>();

@@ -151,7 +151,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 54150363}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f19019d8d83aefb4ba14aa8d15d6f18b, type: 3}
   m_Name: 
@@ -163,7 +163,7 @@ MonoBehaviour:
   damageMultiplier: 1
   baseFireRate: 2
   fireRateMultiplier: 1
-  bombProjectilePrefab: {fileID: 0}
+  bombProjectilePrefab: {fileID: 5605031013654370310, guid: 7152b566bd8cfef4aa56523e37c810f7, type: 3}
   targetingRange: 10
   blastRadius: 3.5
   puddleDuration: 5
@@ -176,7 +176,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 54150363}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b15a1f3a1b4f6f74aad6d58a22a59c93, type: 3}
   m_Name: 
@@ -188,7 +188,7 @@ MonoBehaviour:
   damageMultiplier: 1
   baseFireRate: 2
   fireRateMultiplier: 1
-  dropletPrefab: {fileID: 0}
+  dropletPrefab: {fileID: 8425187455428921582, guid: 82b0fb68845d78e40843e34592a37eaa, type: 3}
   nozzleCount: 4
   rotationSpeed: 90
   dropletSpeed: 8
@@ -524,6 +524,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Utility.CameraFollow
   target: {fileID: 0}
+  slantedView: 1
+  tiltAngle: 50
+  cameraDistance: 20
   smoothTime: 0.1
   offset: {x: 0, y: 0, z: -10}
   clampToArena: 1
@@ -567,9 +570,9 @@ RectTransform:
   - {fileID: 1291509672}
   m_Father: {fileID: 750551833}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 550, y: -225}
   m_SizeDelta: {x: 300, y: 420}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &565582204
@@ -1251,9 +1254,9 @@ RectTransform:
   - {fileID: 992734477}
   m_Father: {fileID: 750551833}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 171.66667, y: -225}
   m_SizeDelta: {x: 300, y: 420}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &787200321
@@ -1390,7 +1393,7 @@ MonoBehaviour:
   emberPrefab: {fileID: 519847042789867597, guid: 7d95483874e642344973570906126fc0, type: 3}
   burnedStumpPrefab: {fileID: 3886511013046766345, guid: 628d275846123f34e9e20ac76c89175d, type: 3}
   gambutPrefab: {fileID: 1684872876890752361, guid: 77bb530c3d18e7c4b8179ac77aaaa278, type: 3}
-  fireBossPrefab: {fileID: 0}
+  fireBossPrefab: {fileID: 914781261802705016, guid: 687739840ba56104d996a9a208b1f5f9, type: 3}
   spawnRadius: 10
   baseSpawnInterval: 1.8
   minSpawnInterval: 0.4
@@ -1428,13 +1431,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Upgrades.UpgradeManager
   customUpgradePool: []
-  playerController: {fileID: 0}
-  playerHealth: {fileID: 0}
-  playerVision: {fileID: 0}
-  playerExperience: {fileID: 0}
-  waterGun: {fileID: 0}
-  peatSprinkler: {fileID: 0}
-  foamBombLauncher: {fileID: 0}
+  playerController: {fileID: 54150369}
+  playerHealth: {fileID: 54150368}
+  playerVision: {fileID: 54150366}
+  playerExperience: {fileID: 54150367}
+  waterGun: {fileID: 1798953170}
+  peatSprinkler: {fileID: 54150365}
+  foamBombLauncher: {fileID: 54150364}
 --- !u!114 &788715654
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1466,9 +1469,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Core.GameManager
   currentState: 0
-  runDurationToBoss: 300
+  runDurationToBoss: 150
   currentRunTimer: 0
-  isBossSpawned: 0
+  isBossSpawned: 1
   totalDewCollected: 0
   enemiesExtinguished: 0
 --- !u!4 &788715656
@@ -2307,9 +2310,9 @@ RectTransform:
   - {fileID: 1254908516}
   m_Father: {fileID: 750551833}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 928.3334, y: -225}
   m_SizeDelta: {x: 300, y: 420}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1348836193
@@ -2467,8 +2470,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Utility.InfiniteGround
   viewCamera: {fileID: 0}
   target: {fileID: 54150373}
-  tileSize: 1
-  tilesPerChunk: 16
+  groundTexture: {fileID: 0}
+  tileWorldSize: 2
 --- !u!1 &1471561516
 GameObject:
   m_ObjectHideFlags: 0
