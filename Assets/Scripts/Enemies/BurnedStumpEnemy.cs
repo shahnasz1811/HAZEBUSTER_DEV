@@ -18,16 +18,22 @@ namespace HazeBuster.Enemies
 
         private float smokeTimer = 0f;
 
-        protected override void Start()
+        // Starting values for a NEW Burned Stump. Once the prefab exists, the numbers in its Inspector
+        // are the ones used. (They used to be forced here on every spawn, so changing them did nothing.)
+        public BurnedStumpEnemy()
         {
-            base.Start();
             enemyName = "Smoldering Burned Stump";
             maxHealth = 80f;
-            FinalizeHealth(); // applies the spawner's health multiplier
             moveSpeed = 1.4f;
             contactDamage = 25f;
             dewDropAmount = 1;
             dewDropTier = DewPickup.DewTier.Large; // 20 EXP per defeated heavy Burned Stump!
+        }
+
+        protected override void Start()
+        {
+            base.Start();
+            FinalizeHealth(); // applies the spawner's health multiplier
         }
 
         protected override void Update()

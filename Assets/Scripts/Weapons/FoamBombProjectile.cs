@@ -84,6 +84,13 @@ namespace HazeBuster.Weapons
             {
                 GameObject puddle = Instantiate(foamPuddlePrefab, transform.position, Quaternion.identity);
                 FoamPuddle fp = puddle.GetComponent<FoamPuddle>();
+                if (fp == null)
+                {
+                    // The puddle prefab has no FoamPuddle script, so add it: without it nothing
+                    // initialises, damages or removes the puddle and it stays forever.
+                    fp = puddle.AddComponent<FoamPuddle>();
+                }
+                Destroy(puddle, puddleDuration + 1f); // safety net
                 if (fp != null)
                 {
                     fp.Initialize(puddleDuration, explosionRadius, damagePerSecond);

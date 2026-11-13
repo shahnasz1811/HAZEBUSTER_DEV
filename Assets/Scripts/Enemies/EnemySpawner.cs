@@ -26,6 +26,14 @@ namespace HazeBuster.Enemies
         public float minSpawnInterval = 0.35f; // Interval at climax (fast swarms)
         public int maxEnemiesAlive = 65;
 
+        [Header("Gentle Start")]
+        [Tooltip("Seconds at the start of a run with no enemies, so the player can get their bearings.")]
+        public float gracePeriodSeconds = 12f;
+        [Tooltip("1 = spawn rate rises in a straight line. Higher = slower start and a faster finish.")]
+        public float rampExponent = 1.8f;
+        [Tooltip("Most enemies alive at once at the start of the run. Rises to Max Enemies Alive by the boss.")]
+        public int startingEnemyCap = 6;
+
         [Header("Runtime Difficulty")]
         [Tooltip("Multiplies enemy HP as time passes (e.g. +10% every minute)")]
         public float hpScalePerMinute = 0.12f;
@@ -56,13 +64,22 @@ namespace HazeBuster.Enemies
 
             // Calculate difficulty ramp based on elapsed run time
             float progress = Mathf.Clamp01(GameManager.Instance.currentRunTimer / GameManager.Instance.runDurationToBoss);
-            float currentSpawnInterval = Mathf.Lerp(baseSpawnInterval, minSpawnInterval, progress);
+            // Eased ramp: slow at the start, faster later. The enemy cap grows the same way.
+            float eased = Mathf.Pow(progress, Mathf.Max(1f, rampExponent));
+            float currentSpawnInterval = Mathf.Lerp(baseSpawnInterval, minSpawnInterval, eased);
+            int enemyCap = Mathf.RoundToInt(Mathf.Lerp(startingEnemyCap, maxEnemiesAlive, eased));
+
+            // Quiet opening: no enemies for the first few seconds.
+            if (GameManager.Instance.currentRunTimer < gracePeriodSeconds)
+            {
+                return;
+            }
 
             spawnTimer += Time.deltaTime;
             if (spawnTimer >= currentSpawnInterval)
             {
                 spawnTimer = 0f;
-                if (activeEnemies.Count < maxEnemiesAlive)
+                if (activeEnemies.Count < enemyCap)
                 {
                     SpawnNextEnemy(progress);
                 }
@@ -83,13 +100,13 @@ namespace HazeBuster.Enemies
             GameObject prefabToSpawn = emberPrefab;
 
             float roll = Random.value;
-            if (runProgress > 0.65f) // Late run: Gambut & Stumps frequent
+            if (runProgress > 0.70f) // Late run: Gambut & Stumps frequent
             {
                 if (roll < 0.35f) prefabToSpawn = emberPrefab;
                 else if (roll < 0.70f) prefabToSpawn = gambutPrefab;
                 else prefabToSpawn = burnedStumpPrefab;
             }
-            else if (runProgress > 0.30f) // Mid run: Burned Stumps introduced
+            else if (runProgress > 0.35f) // Mid run: Burned Stumps introduced
             {
                 if (roll < 0.60f) prefabToSpawn = emberPrefab;
                 else prefabToSpawn = burnedStumpPrefab;

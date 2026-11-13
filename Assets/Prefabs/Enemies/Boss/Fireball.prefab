@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6025107620534875683}
   - component: {fileID: 5453190900535487716}
   - component: {fileID: 7976424265970015104}
+  - component: {fileID: 7307724911069813129}
   m_Layer: 0
   m_Name: Fireball
   m_TagString: Untagged
@@ -172,3 +173,16 @@ MonoBehaviour:
   damage: 20
   speed: 7
   lifetime: 6
+--- !u!114 &7307724911069813129
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2951214905349984}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb47bb6cdee196247932d720cd5738a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Art.ArtSlot
+  id: 7

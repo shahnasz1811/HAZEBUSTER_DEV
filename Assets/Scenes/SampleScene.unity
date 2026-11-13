@@ -135,8 +135,7 @@ GameObject:
   - component: {fileID: 54150368}
   - component: {fileID: 54150367}
   - component: {fileID: 54150366}
-  - component: {fileID: 54150365}
-  - component: {fileID: 54150364}
+  - component: {fileID: 54150374}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -144,56 +143,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &54150364
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 54150363}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f19019d8d83aefb4ba14aa8d15d6f18b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Weapons.FoamBombLauncher
-  weaponName: Base Weapon
-  weaponLevel: 1
-  isUnlocked: 1
-  baseDamage: 15
-  damageMultiplier: 1
-  baseFireRate: 2
-  fireRateMultiplier: 1
-  bombProjectilePrefab: {fileID: 5605031013654370310, guid: 7152b566bd8cfef4aa56523e37c810f7, type: 3}
-  targetingRange: 10
-  blastRadius: 3.5
-  puddleDuration: 5
-  puddleDPS: 25
-  directImpactDamage: 35
---- !u!114 &54150365
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 54150363}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b15a1f3a1b4f6f74aad6d58a22a59c93, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Weapons.PeatSprinkler
-  weaponName: Base Weapon
-  weaponLevel: 1
-  isUnlocked: 1
-  baseDamage: 15
-  damageMultiplier: 1
-  baseFireRate: 2
-  fireRateMultiplier: 1
-  dropletPrefab: {fileID: 8425187455428921582, guid: 82b0fb68845d78e40843e34592a37eaa, type: 3}
-  nozzleCount: 4
-  rotationSpeed: 90
-  dropletSpeed: 8
-  dropletSize: 0.8
-  pierceCount: 1
 --- !u!114 &54150366
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -261,14 +210,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b65baca3260ede34399df8f2bef09157, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Player.PlayerController
-  baseMoveSpeed: 1
-  currentMoveSpeed: 1
+  baseMoveSpeed: 4.5
+  currentMoveSpeed: 4.5
   mainCamera: {fileID: 519420031}
   weaponMount: {fileID: 1798953169}
   characterRenderer: {fileID: 54150372}
   baseDashCooldown: 1.5
   currentDashCooldown: 0
-  dashSpeed: 5
+  dashSpeed: 13
   dashDuration: 0.2
   maxDashCharges: 1
   currentDashCharges: 0
@@ -418,6 +367,19 @@ Transform:
   - {fileID: 1798953169}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &54150374
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 54150363}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb47bb6cdee196247932d720cd5738a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Art.ArtSlot
+  id: 0
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -476,7 +438,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
+  near clip plane: 0.1
   far clip plane: 1000
   field of view: 60
   orthographic: 1
@@ -504,8 +466,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalRotation: {x: -0.4226183, y: 0, z: 0, w: 0.9063078}
+  m_LocalPosition: {x: 0.39345, y: -15.286188, z: -12.855752}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -523,7 +485,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a92c211e89d9c8418e07e280bf1afba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Utility.CameraFollow
-  target: {fileID: 0}
+  target: {fileID: 54150373}
   slantedView: 1
   tiltAngle: 50
   cameraDistance: 20
@@ -1394,11 +1356,14 @@ MonoBehaviour:
   burnedStumpPrefab: {fileID: 3886511013046766345, guid: 628d275846123f34e9e20ac76c89175d, type: 3}
   gambutPrefab: {fileID: 1684872876890752361, guid: 77bb530c3d18e7c4b8179ac77aaaa278, type: 3}
   fireBossPrefab: {fileID: 914781261802705016, guid: 687739840ba56104d996a9a208b1f5f9, type: 3}
-  spawnRadius: 10
-  baseSpawnInterval: 1.8
-  minSpawnInterval: 0.4
-  maxEnemiesAlive: 60
-  hpScalePerMinute: 0.12
+  spawnRadius: 13
+  baseSpawnInterval: 3
+  minSpawnInterval: 0.7
+  maxEnemiesAlive: 45
+  gracePeriodSeconds: 12
+  rampExponent: 1.8
+  startingEnemyCap: 6
+  hpScalePerMinute: 0.08
 --- !u!114 &788715652
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1436,8 +1401,8 @@ MonoBehaviour:
   playerVision: {fileID: 54150366}
   playerExperience: {fileID: 54150367}
   waterGun: {fileID: 1798953170}
-  peatSprinkler: {fileID: 54150365}
-  foamBombLauncher: {fileID: 54150364}
+  peatSprinkler: {fileID: 0}
+  foamBombLauncher: {fileID: 0}
 --- !u!114 &788715654
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1469,9 +1434,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Core.GameManager
   currentState: 0
-  runDurationToBoss: 150
+  runDurationToBoss: 600
   currentRunTimer: 0
-  isBossSpawned: 1
+  isBossSpawned: 0
   totalDewCollected: 0
   enemiesExtinguished: 0
 --- !u!4 &788715656
@@ -2847,6 +2812,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1798953169}
   - component: {fileID: 1798953170}
+  - component: {fileID: 1798953172}
+  - component: {fileID: 1798953171}
   m_Layer: 0
   m_Name: WeaponMount
   m_TagString: Untagged
@@ -2897,6 +2864,56 @@ MonoBehaviour:
   projectileSpeed: 14
   pierceCount: 1
   knockback: 6
+--- !u!114 &1798953171
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1798953168}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f19019d8d83aefb4ba14aa8d15d6f18b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Weapons.FoamBombLauncher
+  weaponName: Base Weapon
+  weaponLevel: 1
+  isUnlocked: 1
+  baseDamage: 15
+  damageMultiplier: 1
+  baseFireRate: 2
+  fireRateMultiplier: 1
+  bombProjectilePrefab: {fileID: 5605031013654370310, guid: 7152b566bd8cfef4aa56523e37c810f7, type: 3}
+  targetingRange: 10
+  blastRadius: 0.5
+  puddleDuration: 4
+  puddleDPS: 25
+  directImpactDamage: 35
+--- !u!114 &1798953172
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1798953168}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b15a1f3a1b4f6f74aad6d58a22a59c93, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Weapons.PeatSprinkler
+  weaponName: Base Weapon
+  weaponLevel: 1
+  isUnlocked: 1
+  baseDamage: 15
+  damageMultiplier: 1
+  baseFireRate: 2
+  fireRateMultiplier: 1
+  dropletPrefab: {fileID: 8425187455428921582, guid: 82b0fb68845d78e40843e34592a37eaa, type: 3}
+  nozzleCount: 4
+  rotationSpeed: 90
+  dropletSpeed: 8
+  dropletSize: 0.8
+  pierceCount: 1
 --- !u!1 &1808792988
 GameObject:
   m_ObjectHideFlags: 0

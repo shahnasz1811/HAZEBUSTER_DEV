@@ -37,6 +37,17 @@ namespace HazeBuster.Boss
 
         private float attackTimer = 0f;
 
+        // Starting values for a NEW boss. Once the prefab exists, the numbers in its Inspector are the
+        // ones used. (They used to be forced in Start() on every spawn, so changing them did nothing.)
+        public FireBoss()
+        {
+            enemyName = "The Mega Wildfire Nexus";
+            maxHealth = 1200f;
+            moveSpeed = 1.2f;
+            contactDamage = 35f;
+            dewDropAmount = 25; // Massive reward for defeating boss
+        }
+
         protected override void Awake()
         {
             base.Awake();
@@ -46,13 +57,7 @@ namespace HazeBuster.Boss
 
         protected override void Start()
         {
-            base.Start();
-            enemyName = "The Mega Wildfire Nexus";
-            maxHealth = 1200f;
-            currentHealth = maxHealth;
-            moveSpeed = 1.2f;
-            contactDamage = 35f;
-            dewDropAmount = 25; // Massive reward for defeating boss
+            base.Start(); // fills health from the Inspector's Max Health
 
             OnBossHealthChanged?.Invoke(currentHealth, maxHealth);
         }

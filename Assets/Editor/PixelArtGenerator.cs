@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEditor;
@@ -12,9 +13,32 @@ namespace HazeBuster.Editor
     /// </summary>
     public static class PixelArtGenerator
     {
+        // Files written by the current run. Only these get the pixel-art import settings, so your own
+        // art in the same folder is never touched.
+        private static readonly List<string> written = new List<string>();
+        private static bool overwriteExisting;
+
         [MenuItem("HazeBuster/Generate Pixel Art Placeholders")]
         public static void GenerateAllSprites()
         {
+            overwriteExisting = false;
+            GenerateAll();
+        }
+
+        [MenuItem("HazeBuster/Generate Pixel Art Placeholders (Overwrite All)")]
+        public static void GenerateAllSpritesOverwrite()
+        {
+            if (!EditorUtility.DisplayDialog("HAZEBUSTER", "This replaces EVERY placeholder in Assets/Sprites, including any you have already swapped for your own art that uses the same file name. Continue?", "Overwrite", "Cancel"))
+            {
+                return;
+            }
+            overwriteExisting = true;
+            GenerateAll();
+        }
+
+        private static void GenerateAll()
+        {
+            written.Clear();
             string folderPath = "Assets/Sprites";
             if (!Directory.Exists(folderPath))
             {
@@ -36,19 +60,28 @@ namespace HazeBuster.Editor
             AssetDatabase.Refresh();
             ConfigureImportSettings(folderPath);
 
-            EditorUtility.DisplayDialog("HAZEBUSTER", "Success! All 10 Pixel Art placeholder sprites have been generated in Assets/Sprites!", "Awesome!");
-            Debug.Log("<color=green>[HAZEBUSTER] All 10 Pixel Art placeholder sprites generated successfully in Assets/Sprites!</color>");
+            string summary = written.Count + " placeholder sprite(s) written to Assets/Sprites." +
+                             (written.Count < 11 ? " Existing files were kept, so your own art is safe." : "");
+            EditorUtility.DisplayDialog("HAZEBUSTER", summary, "Awesome!");
+            Debug.Log("<color=green>[HAZEBUSTER] " + summary + "</color>");
         }
 
         private static void SaveSprite(Texture2D tex, string path)
         {
+            // Never overwrite a file that is already there (it may be your own art).
+            if (File.Exists(path) && !overwriteExisting)
+            {
+                return;
+            }
+
             byte[] pngData = tex.EncodeToPNG();
             File.WriteAllBytes(path, pngData);
+            written.Add(path);
         }
 
         private static void ConfigureImportSettings(string folderPath)
         {
-            string[] files = Directory.GetFiles(folderPath, "*.png");
+            string[] files = written.ToArray(); // only the files written in this run
             foreach (string file in files)
             {
                 TextureImporter importer = AssetImporter.GetAtPath(file) as TextureImporter;

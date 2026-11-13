@@ -95,6 +95,13 @@ namespace HazeBuster.Art
                 first = slot.sprite;
             }
 
+            // No art in the slot yet, but a World Height is set: scale the placeholder itself to that
+            // height. This is what makes the whole library the one place that decides how big things are.
+            if (first == null && slot.worldHeight > 0.0001f)
+            {
+                first = sr.sprite;
+            }
+
             if (first != null)
             {
                 Sprite current = sr.sprite;

@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 713889428655434323}
   - component: {fileID: 2098832576737409658}
   - component: {fileID: 839492200717464032}
+  - component: {fileID: 2639268916517232971}
   m_Layer: 0
   m_Name: WaterProjectile
   m_TagString: Untagged
@@ -174,3 +175,16 @@ MonoBehaviour:
   knockbackForce: 6
   pierceCount: 1
   lifetime: 3
+--- !u!114 &2639268916517232971
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8425187455428921582}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb47bb6cdee196247932d720cd5738a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Art.ArtSlot
+  id: 6

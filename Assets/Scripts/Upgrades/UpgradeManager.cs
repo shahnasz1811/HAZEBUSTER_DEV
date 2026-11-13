@@ -59,6 +59,25 @@ namespace HazeBuster.Upgrades
         {
             FindReferencesIfNull();
             InitializeUpgradePool();
+            LockSecondaryWeapons();
+        }
+
+        /// <summary>
+        /// The Peat Sprinkler and Foam Mortar start locked and switched off. A weapon component that is
+        /// disabled never runs Update, so the unlock card must switch it on (see ApplySelectedUpgrade).
+        /// </summary>
+        private void LockSecondaryWeapons()
+        {
+            if (peatSprinkler != null)
+            {
+                peatSprinkler.isUnlocked = false;
+                peatSprinkler.enabled = false;
+            }
+            if (foamBombLauncher != null)
+            {
+                foamBombLauncher.isUnlocked = false;
+                foamBombLauncher.enabled = false;
+            }
         }
 
         private void FindReferencesIfNull()
@@ -248,7 +267,11 @@ namespace HazeBuster.Upgrades
                     break;
 
                 case UpgradeType.UnlockSprinkler:
-                    if (peatSprinkler != null) peatSprinkler.isUnlocked = true;
+                    if (peatSprinkler != null)
+                    {
+                        peatSprinkler.isUnlocked = true;
+                        peatSprinkler.enabled = true; // a disabled weapon never fires
+                    }
                     break;
                 case UpgradeType.SprinklerFireRate:
                 case UpgradeType.SprinklerDamage:
@@ -257,7 +280,11 @@ namespace HazeBuster.Upgrades
                     break;
 
                 case UpgradeType.UnlockFoamBomb:
-                    if (foamBombLauncher != null) foamBombLauncher.isUnlocked = true;
+                    if (foamBombLauncher != null)
+                    {
+                        foamBombLauncher.isUnlocked = true;
+                        foamBombLauncher.enabled = true; // a disabled weapon never fires
+                    }
                     break;
                 case UpgradeType.FoamBombFireRate:
                 case UpgradeType.FoamBombDamage:

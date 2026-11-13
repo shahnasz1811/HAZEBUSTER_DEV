@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 4577374665931290607}
   - component: {fileID: 6425239169072181865}
   - component: {fileID: 5917868265274274801}
+  - component: {fileID: 8902960218882127653}
   m_Layer: 0
   m_Name: Gambut
   m_TagString: Enemy
@@ -170,17 +171,30 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Enemies.GambutEnemy
   enemyName: Fire Hazard
-  maxHealth: 30
+  maxHealth: 45
   currentHealth: 0
   moveSpeed: 2
-  contactDamage: 15
+  contactDamage: 18
   dewDropAmount: 1
   healthMultiplier: 1
   dewPrefab: {fileID: 1586141086967353211, guid: df0579dbe3f3d6647b89786a802803b9, type: 3}
-  dewDropTier: 1
+  dewDropTier: 5
   spriteRenderer: {fileID: 0}
   hurtColor: {r: 0, g: 1, b: 1, a: 1}
   despawnWhenFar: 1
   despawnDistance: 35
-  burningGroundPrefab: {fileID: 0}
-  trailDropInterval: 1.8
+  burningGroundPrefab: {fileID: 3766560523724718599, guid: 80e6537a7f4caf6439f5c80ee0662e4d, type: 3}
+  trailDropInterval: 3.5
+--- !u!114 &8902960218882127653
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1684872876890752361}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb47bb6cdee196247932d720cd5738a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Art.ArtSlot
+  id: 3

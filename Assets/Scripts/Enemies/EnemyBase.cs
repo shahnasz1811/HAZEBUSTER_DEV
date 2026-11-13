@@ -70,8 +70,7 @@ namespace HazeBuster.Enemies
 
         /// <summary>
         /// Call once at the end of Start(), after the enemy's own base stats are set.
-        /// Applies the spawner's health multiplier and fills health. Setting maxHealth from outside
-        /// before Start() does not work, because each enemy type resets its stats in Start().
+        /// Applies the spawner's health multiplier to the Max Health from the Inspector and fills health.
         /// </summary>
         protected void FinalizeHealth()
         {

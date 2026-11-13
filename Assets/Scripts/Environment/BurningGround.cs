@@ -12,7 +12,7 @@ namespace HazeBuster.Environment
     {
         [Header("Hazard Stats")]
         public float damagePerSecond = 15f;
-        public float lifetime = 12f;
+        public float lifetime = 6f;
         public bool isExtinguished = false;
 
         [Header("Visuals")]

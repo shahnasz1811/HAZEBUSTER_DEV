@@ -16,15 +16,21 @@ namespace HazeBuster.Enemies
 
         private float wobbleSeed;
 
+        // Starting values for a NEW Ember. Once the prefab exists, the numbers in its Inspector are the
+        // ones used. (They used to be forced here on every spawn, so changing them did nothing.)
+        public EmberEnemy()
+        {
+            enemyName = "Airborne Ember";
+            maxHealth = 15f;
+            moveSpeed = 3f;
+            contactDamage = 10f;
+            dewDropAmount = 1;
+        }
+
         protected override void Start()
         {
             base.Start();
-            enemyName = "Airborne Ember";
-            maxHealth = 15f;
             FinalizeHealth(); // applies the spawner's health multiplier
-            moveSpeed = 4.2f;
-            contactDamage = 10f;
-            dewDropAmount = 1;
 
             wobbleSeed = Random.Range(0f, 100f);
         }

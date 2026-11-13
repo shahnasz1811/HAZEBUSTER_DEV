@@ -6,7 +6,7 @@ A 2D top-down **action roguelite** about pushing back peatland haze. You play an
 | :--- | :--- |
 | Genre | 2D action roguelite / survival, slanted orthographic camera (see [Camera perspective](#camera-perspective-slanted-orthographic-hell-maiden-style)) |
 | Engine | Unity 6000.4.2f1 |
-| Camera | Orthographic, tilted back 50 degrees by default (`CameraFollow`). Gameplay stays on the flat XY plane with Rigidbody2D |
+| Camera | Orthographic, tilted back 35 degrees by default (`CameraFollow`). Gameplay stays on the flat XY plane with Rigidbody2D |
 | Render pipeline | Built-in (2D template). The URP package is **not** installed |
 | Input | Input System 1.19.0 + legacy Input Manager (Active Input Handling = Both) |
 | UI | uGUI with legacy `Text` |
@@ -14,7 +14,7 @@ A 2D top-down **action roguelite** about pushing back peatland haze. You play an
 | Inspiration | *Everything is a Crab*, *Vampire Survivors*, *Nuclear Throne* |
 | Design doc | [`HAZEBUSTER_GDD.md`](HAZEBUSTER_GDD.md) |
 
-> **Status (2 Nov 2026): early prototype.** Most gameplay scripts exist, but the saved scene (`SampleScene`) now has the Player, ground, managers and HUD, and the boss and several prefabs are still missing. Parts of the GDD are not built yet. The world is now endless (see the World row below). Bug fixes, arena code and the endless world were written on 2 Nov 2026 **but have not been compiled in Unity yet**: open the project, let it compile, and fix any console errors before building further. See [Known issues](#known-issues), [GDD coverage](#gdd-coverage), [Roadmap](#roadmap) and the [Progress log](#progress-log).
+> **Status (13 Nov 2026): early prototype.** Most gameplay scripts exist, but the saved scene (`SampleScene`) now has the Player, ground, managers and HUD, and the boss and several prefabs are still missing. Parts of the GDD are not built yet. The world is now endless (see the World row below). Everything written from 2 Nov to 13 Nov 2026 (bug fixes, endless world, slanted camera, replaceable art, balance) **has not been compiled in Unity yet**: open the project, let it compile, and fix any console errors before building further. See [Known issues](#known-issues), [GDD coverage](#gdd-coverage), [Roadmap](#roadmap) and the [Progress log](#progress-log).
 
 ---
 
@@ -51,11 +51,12 @@ Explore smoldering peatland (haze limits vision)
 
 1. Open the folder in Unity Hub with editor **6000.4.2f1**. Let it compile and read the Console. The code has not been compiled since the 2 Nov 2026 changes.
 2. The tags `Enemy` and `Hazard` are added automatically by `TagSetup` when Unity loads the scripts. If they are missing, run **HazeBuster > Ensure Required Tags**.
-3. Run **HazeBuster > Generate Pixel Art Placeholders** to create the sprites in `Assets/Sprites`.
+3. Run **HazeBuster > Generate Pixel Art Placeholders** to create the sprites in `Assets/Sprites`. It keeps files that already exist, so your own art is safe.
 4. Build the player, prefabs and managers following [`UNITY_SETUP_GUIDE.md`](UNITY_SETUP_GUIDE.md) sections 4-6. Skip the 2D-light steps: they need URP, which this project does not have. Put the Player on the `Player` tag.
 5. Run **HazeBuster > Create Complete Game UI & Level-Up Menu**.
 6. Skip **HazeBuster > Build Arena Walls (60x60)** unless you want a closed arena. The world is endless, and those walls would stop the player from leaving the square.
-7. Press Play.
+7. Run **HazeBuster > Art > Set Up Replaceable Art**, then **HazeBuster > Balance > Apply Hell Maiden Starting Feel**, then save the scene (Ctrl+S). The first sizes every character to about 1 unit tall and creates the Art Library. The second sets speeds that fit that size. See [Replaceable art and scale](#replaceable-art-and-scale).
+8. Press Play.
 
 | Menu item | Tool | What it does |
 | :--- | :--- | :--- |
@@ -70,13 +71,14 @@ Explore smoldering peatland (haze limits vision)
 
 ```
 Assets/
-  Editor/             ArenaSetupTool, PixelArtGenerator, SlantedPerspectiveTool, TagSetup, UISetupTool
+  Editor/             ArenaSetupTool, ArtSetupTool, FeelSetupTool, PixelArtGenerator, SlantedPerspectiveTool, TagSetup, UISetupTool
   Prefabs/
     Enemies/          Ember, BurnedStump, Gambut
     Weapons/          WaterProjectile
     Resources/        DewPickup
   Scenes/             SampleScene (Player, ground, managers, HUD)
   Scripts/
+    Art/              ArtLibrary, ArtSlot
     Boss/             FireBoss, FireProjectile
     Core/             GameManager, SoundManager
     Enemies/          EnemyBase, EmberEnemy, BurnedStumpEnemy, GambutEnemy, EnemySpawner
@@ -86,10 +88,12 @@ Assets/
     UI/               UIManager, UpgradeCardUI
     Upgrades/         UpgradeType, UpgradeData, UpgradeManager
     Utility/          ArenaBounds, CameraFollow, InfiniteGround, InputHelper, PlayerLocator, PoolManager,
-                      SlantedPerspective
+                      SlantedPerspective, WorldScale
     Weapons/          WeaponBase, WaterGun, WaterProjectile, PeatSprinkler,
                       FoamBombLauncher, FoamBombProjectile, FoamPuddle
-  Shaders/Resources/  HazeBusterSpriteBillboard (draws sprites upright for the slanted camera)
+  Shaders/Resources/  HazeBusterSpriteBillboard (draws sprites upright for the slanted camera),
+                      HazeBusterEndlessGround (the endless ground)
+  Resources/          HazeBusterArt (the Art Library, created by HazeBuster > Art > Set Up Replaceable Art)
   Sprites/            11 generated placeholder PNGs
 ```
 
@@ -98,18 +102,18 @@ Assets/
 | System | Current behaviour |
 | :--- | :--- |
 | Run flow | `GameManager` states: Playing, LevelingUp, Paused, GameOver, Victory. `Time.timeScale` is 0 outside Playing. Boss triggers at `runDurationToBoss` (default 300 s). Retry reloads the scene. Every manager belongs to its scene, so a Retry starts completely fresh. Credits are paid out once per run. |
-| Player | 100 HP, move speed 5, 1 s hurt invulnerability (separate from dash invulnerability). Dash: 1.5 s cooldown, speed 16 for 0.2 s, 1 charge. Movement uses `Rigidbody2D`. Not limited: the world is endless. |
+| Player | 100 HP, move speed 4.5 (set by the Feel tool), 1 s hurt invulnerability (separate from dash invulnerability). Dash: 1.5 s cooldown, speed 13 for 0.2 s, 1 charge. Movement uses `Rigidbody2D`. Not limited: the world is endless. |
 | Experience | Dew tiers: small 1, medium 5, large 20 EXP. First level needs 6 EXP, then `round(previous x 1.3) + 3`. Pickup radius starts at 1.2. |
 | Water Gun | 15 damage, 14 units/s, 2 shots/s, 12 degree fan spread, knockback 6. Droplets are pooled and reused. |
 | Peat Sprinkler | Locked until chosen. 4 nozzles, 90 degrees/s, 8 damage. |
 | Foam Bomb Mortar | Locked until chosen. 0.4 shots/s, impact 35, radius 3.5, puddle lasts 5 s. |
-| Enemies | Ember 15 HP / speed 4.2. Burned Stump 80 HP / 1.4 (drops 20 EXP). Gambut 45 HP / 2.0 (drops 5 EXP, leaves burning ground). Health is multiplied by `1 + 0.12 x minutes` at spawn. Enemies more than 35 units from the player are removed (the boss is not). |
+| Enemies | Ember 15 HP / speed 3 (4.2 before 13 Nov 2026, see [Scale and speeds](#scale-and-speeds)). Burned Stump 80 HP / 1.4 (drops 20 EXP). Gambut 45 HP / 2.0 (drops 5 EXP, leaves burning ground). Health is multiplied by `1 + 0.12 x minutes` at spawn. Enemies more than 35 units from the player are removed (the boss is not). |
 | Boss | Wildfire Nexus, 1200 HP. Phases switch at 66 % and 33 % HP. Attacks: fireball nova, fireball barrage, ember summon, burning-ground patches. It spawns 9 units from the player in a random direction (on the roomier side while the arena is on). |
 | Spawner | Interval goes 1.8 s to 0.35 s over the run. Under 30 % of the run: embers only. 30-65 %: embers and stumps. Over 65 %: all three. Up to 65 alive. Spawn points are on a ring around the player. An unassigned prefab falls back to an ember. |
 | Upgrades | 19 built-in cards, 3 random per level-up, game pauses while choosing. If one pickup gives several levels, each level-up shows its own cards in turn. |
 | Meta-progression | 6 permanent perks, 5 ranks each, costs 20 / 50 / 100 / 180 / 300, saved in `PlayerPrefs`. Credits = dew collected (+100 on victory). |
 | UI | HUD (HP, EXP, level, timer, dash, dew) and level-up modal. `UIManager` has fields for the boss bar, game over, victory and shop panels, but no tool builds them yet. |
-| World | Endless. `InfiniteGround` is one tiled sprite that follows the camera in whole-tile steps and resizes itself to the view, so the tiles stay locked to one fixed grid. `EnvironmentStreamer` builds props around the camera in 10 x 10 unit chunks and creates itself if the scene has none. Each chunk is generated from the world seed and its coordinates, so a place looks the same when you come back (the seed is random each run by default). Fires you put out leave a restored patch and fires that burn out leave a scorched patch. These marks are stored per chunk (40 per chunk, oldest dropped) and come back when the chunk loads again. Nothing is saved between runs. Placeholder props are generated until you assign sprites. |
+| World | Endless. `InfiniteGround` draws one flat surface that follows the middle of the camera view. The ground picture is placed by world position inside the `Endless Ground` shader, so it never slides, snaps or pops, and it repeats forever. It uses the picture in the Art Library, or a generated soft peat texture. `EnvironmentStreamer` builds props around the camera in 10 x 10 unit chunks and creates itself if the scene has none. Each chunk is generated from the world seed and its coordinates, so a place looks the same when you come back (the seed is random each run by default). Fires you put out leave a restored patch and fires that burn out leave a scorched patch. These marks are stored per chunk (40 per chunk, oldest dropped) and come back when the chunk loads again. Nothing is saved between runs. Placeholder props are generated until you fill the Art Library. Props are sized in character heights. |
 | Audio | Procedural 8-bit sound effects, generated once and cached. No audio files needed. |
 
 ---
@@ -122,7 +126,7 @@ Assets/
 
 *Hell Maiden* (AstralShift, Windows, in development) is an action horde-survival deckbuilder inspired by Dante's Divine Comedy. [GamesRadar's preview](https://www.gamesradar.com/games/roguelike/dantes-inferno-with-90s-sailor-moon-aesthetics-got-me-to-play-this-vampire-survivors-like-demo-in-steam-next-fest-and-the-second-i-realized-it-was-a-deckbuilding-roguelike-with-hades-storytelling-i-couldnt-smash-the-wishlist-button-fast-enough) says you steer the hero from an isometric viewpoint while she attacks automatically about once a second. That is the same loop as HAZEBUSTER, drawn from a slanted camera instead of straight down.
 
-**What I could not find:** the exact camera angle, zoom or engine are not published in anything I found, and I could not watch gameplay footage in this session. The default tilt (50 degrees) is therefore an estimate. Compare it with Hell Maiden screenshots and tune `Tilt Angle` by eye.
+**What more research found (13 Nov 2026):** a Steam review describes an isometric view with sprites "projected at an angle from the ground" and attacks that hover a little above the floor, and Steam tags it 2D, Pixel Graphics, Top-Down and Anime. Press coverage describes nostalgic 2000s-style pixel art with a modern finish. The exact camera angle is still not published, so the default tilt is now **35 degrees (a gentle slant)**, which was your choice. Tune `Tilt Angle` by eye.
 
 ### What this look is made of
 
@@ -140,23 +144,23 @@ This is my breakdown of the style, based on the description above and common pra
 
 1. Open the project in Unity 6000.4.2f1 and let it compile.
 2. Press Play. The view is applied by itself: if the Main Camera has no `CameraFollow`, one is added when the scene loads.
-3. Optional, to preview in the Scene without playing: **HazeBuster > Camera > Apply Slanted Orthographic View**. **HazeBuster > Camera > Reset To Flat 2D View** goes back. Characters only stand upright while playing, and the ground sprite only resizes while playing.
+3. Optional, to preview in the Scene without playing: **HazeBuster > Camera > Apply Slanted Orthographic View**. **HazeBuster > Camera > Reset To Flat 2D View** goes back. Characters only stand upright while playing, and the ground only exists while playing.
 4. Tune on the camera's `CameraFollow` component. Changes made while playing apply immediately.
 
 | Setting | Default | Notes |
 | :--- | :-: | :--- |
 | `Slanted View` | on | Off = the old flat top-down camera and normal sprites |
-| `Tilt Angle` | 50 | Degrees away from straight down |
+| `Tilt Angle` | 35 | Degrees away from straight down |
 | `Camera Distance` | 20 | Only has to keep the scene inside the clip planes |
 
 | Tilt | Look | Ground squash (cos) |
 | :-: | :--- | :-: |
 | 0 | Flat top-down (old view) | 1.00 |
-| 35 | Gentle slant | 0.82 |
-| 50 | 3/4 view (default) | 0.64 |
+| 35 | Gentle slant (default) | 0.82 |
+| 50 | 3/4 view | 0.64 |
 | 60 | True 2:1 isometric ground | 0.50 |
 
-At tilt 50, orthographic size 5 and a 16:9 window the camera sees about 17.8 x 15.6 ground units (flat view: 17.8 x 10), so you see more up and down.
+At tilt 35, orthographic size 5 and a 16:9 window the camera sees about 17.8 x 12.2 ground units (flat view: 17.8 x 10), so you see more up and down.
 
 ### What changed
 
@@ -166,7 +170,7 @@ At tilt 50, orthographic size 5 and a 16:9 window the camera sees about 17.8 x 1
 | `Shaders/Resources/HazeBusterSpriteBillboard.shader` | New. Built-in pipeline sprite shader that faces the camera. Loaded from `Resources` so it is also in builds |
 | `Editor/SlantedPerspectiveTool.cs` | New. The two **HazeBuster > Camera** menu items |
 | `Utility/CameraFollow.cs` | Rewritten. Tilted orthographic follow, arena clamp measured on the visible ground, live tuning. `Offset` is now only used when Slanted View is off |
-| `Utility/InfiniteGround.cs` | Rewritten. Follows the ground point in the middle of the screen and covers the taller visible area |
+| `Utility/InfiniteGround.cs` | Rewritten again on 13 Nov 2026: a world-anchored endless surface (see Replaceable art and scale) |
 | `Environment/EnvironmentStreamer.cs` | Chunks load around the visible ground. Props stand upright, ground marks stay flat |
 | `Player/PlayerController.cs`, `Weapons/WaterGun.cs`, `Weapons/FoamBombLauncher.cs` | Aim and dash direction use the ground point under the cursor. The player is drawn upright |
 | `Enemies/EnemyBase.cs`, `Environment/DewPickup.cs` | Enemies (and the boss) and dew are drawn upright |
@@ -178,8 +182,8 @@ At tilt 50, orthographic size 5 and a 16:9 window the camera sees about 17.8 x 1
 - **Weapon sprites:** a sprite on the `WeaponMount` child would be drawn upright and would not turn to aim. No placeholder has one today. If you add one, keep it on the flat material or give it its own handling.
 - **Pivots:** an upright sprite stands around its pivot, which is the object's position. With the usual centre pivot, a character's feet sit half a sprite below its collider centre. Setting the pivot to Bottom puts the feet on the collider, and is the better setup for this view.
 - **Depth sorting:** Unity sorts by Order in Layer first, so props (Decor Sorting Order -5) always draw behind characters. For a character to walk behind a tree, give both the same Order in Layer. Equal-order sprites should then sort by depth, which here follows world Y. Check this in play.
-- **Feel:** moving up and down covers 0.64 of the screen distance that moving sideways does, because the ground is foreshortened. Enemies move in the same ground space, so the game stays consistent.
-- **Spawn ring:** `EnemySpawner.spawnRadius` is 12, and the corners of the new view are about 11.8 units from the centre at 16:9. If enemies pop in at the corners, raise it to about 13 on the EnemySpawner component.
+- **Feel:** at the default tilt of 35, moving up and down covers 0.82 of the screen distance that moving sideways does, because the ground is foreshortened (0.64 at tilt 50). Enemies move in the same ground space, so the game stays consistent.
+- **Spawn ring:** `EnemySpawner.spawnRadius` is 12. At the default tilt of 35 the corners of the view are about 10.8 units from the centre at 16:9, so enemies appear off screen. At tilt 50 the corners are about 11.8, so raise it to about 13 on the EnemySpawner component if enemies pop in.
 - **Arcs:** the foam bomb arc and the dew pop hop along world Y, which on a tilted ground reads as moving over the floor rather than rising. This is an art fix for later (draw a separate height offset).
 - **Lighting:** the limited-vision light still needs URP 2D lights and is not part of this change.
 
@@ -187,10 +191,79 @@ At tilt 50, orthographic size 5 and a 16:9 window the camera sees about 17.8 x 1
 
 1. Open Unity, let it compile, and fix any Console errors from the new scripts or the shader.
 2. Play: check that the aim hits the cursor, nothing looks squashed, and there is no seam or gap at the edge of the ground when you walk far in every direction.
-3. Compare with Hell Maiden screenshots and tune `Tilt Angle`. Orthographic size 5 with 100 pixels per unit still makes characters tiny (open issue 8).
-4. Add pivots at the feet, a soft oval shadow under each character, and matching Order in Layer for depth sorting.
+3. Compare with Hell Maiden screenshots and tune `Tilt Angle` and the Main Camera's `Size` (smaller = bigger characters). Character size now comes from the Art Library, so run the two menu items in Quick start step 7 first.
+4. Feet pivots and a soft oval contact shadow are options in the Art Library now. Still to do: matching Order in Layer for depth sorting.
 
 ---
+
+## Replaceable art and scale
+
+> **Status (13 Nov 2026): written, not compiled or play-tested.** Run the two menu items in Quick start step 7 after the project compiles.
+
+### What was wrong
+
+- **Two scales were mixed.** The sprites import at 100 pixels per unit, so the player was 0.16 units tall (collider 0.04, speed 1). But many numbers assume a character about 1 unit tall: ember collider 0.5, magnet radius 3, spawn ring 10, steam burst 2.5. An Ember chasing a body six times smaller than the game expects felt far too fast.
+- **Enemy numbers were ignored.** Ember, Burned Stump, Gambut and the boss forced their speed, health and damage in `Start()` on every spawn. The Inspector values did nothing (your Ember prefab said speed 0.1 and the game used 4.2). They now come from the prefab, and a constructor supplies the starting values for a brand-new enemy.
+- **The ground could pop and shimmer.** The old ground was a tiled sprite of 16 pixel tiles that jumped in chunk steps. At a slant, tiny pixels sampled at fractions of a pixel shimmer, and each jump could flip a row of pixels.
+
+### The fixes
+
+| Part | What it does |
+| :--- | :--- |
+| `Art/ArtLibrary.cs` | One asset, `Assets/Resources/HazeBusterArt.asset`, where all the art and sizes live: one slot per character, pickup and projectile, plus ground, props and ground marks |
+| `Art/ArtSlot.cs` | On each prefab and on the Player. Looks up its slot, swaps in your sprite (or animation frames), scales it to the slot's World Height, optionally fits the hitbox and adds a soft contact shadow |
+| `Utility/WorldScale.cs` | Measures the player's height. The ground tile, the props and the ground marks are sized in multiples of it, so they stay in proportion with the characters |
+| `Utility/InfiniteGround.cs` + `Endless Ground` shader | One flat surface that follows the middle of the view. The picture is placed by world position in the shader, so it cannot slide, snap or pop. Mip maps and anisotropic filtering keep it calm at a slant |
+| `Editor/ArtSetupTool.cs` | **HazeBuster > Art > Set Up Replaceable Art**: creates the library, adds the slots to the prefabs and the Player. Safe to re-run |
+| `Editor/FeelSetupTool.cs` | **HazeBuster > Balance > Apply Hell Maiden Starting Feel**: asks first, then writes the speeds below |
+
+### How to replace a placeholder
+
+1. Run **HazeBuster > Art > Set Up Replaceable Art** once. It selects `HazeBusterArt`.
+2. Drag your sprite into that character's slot. Any image size works.
+3. Optional per slot: `World Height` (0 keeps the placeholder's height), `Anchor` (Feet puts the bottom centre on the ground point), `Hitbox Radius`, `Contact Shadow`, and `Animation` frames with `Frames Per Second`.
+4. Press Play. A slot with no sprite keeps its placeholder, so you can replace things one at a time.
+
+**Ground:** make a seamless tileable picture (for example 1024 x 1024), select it in the Project window, run **HazeBuster > Art > Prepare Selected Texture As Ground**, then drag it into `Ground Texture`. `Ground Tile In Characters` sets how many character heights one repeat covers. `Ground Variation` lays a slow light and dark pattern over it to hide the repeat.
+
+**Props and marks:** fill `Props`, `Restored Mark` and `Scorched Mark`. Props stand upright with their bottom edge on the ground. Marks lie flat. Their sizes are set on the `EnvironmentStreamer` in character heights.
+
+**Import settings for HD art:** the default sprite import (Bilinear filter) is fine. Pixels per unit no longer matters, because every sprite is scaled to a World Height. `PixelArtGenerator` only touches the files it writes, and it keeps files that already exist.
+
+### Scale and speeds
+
+Starting World Heights (units): Player 1, Ember 0.75, Burned Stump 1.2, Gambut 1.1, Boss 2.6, Dew 0.45, Water droplet 0.4. Hitbox radius: Player 0.28, Ember 0.3, Stump 0.5, Gambut 0.45. At the camera's default `Size` 5 the player is about a tenth of the screen height.
+
+| | Move speed | Health | Contact damage |
+| :--- | :--- | :--- | :--- |
+| Player | 4.5 (dash 13) | 100 | |
+| Ember | 3.0 | 15 | 10 |
+| Gambut | 2.0 | 45 | 18 |
+| Burned Stump | 1.4 | 80 | 25 |
+
+The ratio matters more than the numbers: the Player is fastest, the Ember (fast swarmer) is about two thirds of the Player, the Gambut about half, the Stump about a third. Health, damage and dew drops are the values the enemies were really using before, so only the Ember's speed (4.2 to 3.0) and the Player's speed change the game. Bigger characters on screen: make the Main Camera's `Size` smaller.
+
+### Things to know
+
+- The ground, props and shadows only exist while playing.
+- The prefab numbers now count. If an enemy feels wrong, change its Inspector values. The old test values on the prefabs (Ember speed 0.1, damage 2, health 30) are replaced when you run the Feel tool. Until then they are what the game uses.
+- Prefabs that do not exist yet (boss, fire projectile, foam bomb, foam puddle, burning ground) get an Art Slot when you re-run the setup tool after making them. Their World Heights are 0 or a guess until you set them.
+- Animation is a simple loop of frames per slot. Separate idle, walk and hurt states are not built.
+
+## Secondary weapons, after-effects and pacing
+
+> **Status (13 Nov 2026): written, not compiled or play-tested.** Reload `SampleScene` if Unity asks, since this edit changed values in the scene file.
+
+| Problem | Cause | Fix |
+| :--- | :--- | :--- |
+| Peat Sprinkler and Foam Mortar never fire, even after their cards and upgrades | In the saved scene both components on `WeaponMount` are **switched off**, and a disabled component never runs `Update`. The unlock card only set `isUnlocked`, never switched the component on. Both were also saved as already unlocked | `UpgradeManager` now locks and switches both off at the start of a run, and the unlock cards set `isUnlocked` and `enabled`. Their upgrade cards only appear after the unlock |
+| Foam puddles stay forever, deal no damage and are the wrong size | The `FoamBombPuddle` prefab has no `FoamPuddle` script, so nothing initialised or removed it. The script also scaled the collider by the sprite scale, which would have made the hit area huge | `FoamBombProjectile` adds the script when it is missing and destroys the puddle after `duration + 1 s` as a safety net. `FoamPuddle` sizes the picture and the hit area to `Blast Radius`. Puddle duration is 4 s (was 5) |
+| Burning ground lingers | Lifetime was 12 s and each Gambut dropped a patch every 1.8 s, so about 7 patches per Gambut at once | Lifetime 6 s (script and prefab). Gambut drops one every 3.5 s (script and prefab) |
+| Enemies ramp up too fast | The scene had `runDurationToBoss` at 100 s, and the spawn rate and enemy mix follow that clock: stumps at 30 s, all three types at 65 s, 60 alive by the end | Boss at 600 s. 12 s with no enemies. The spawn rate and the enemy cap now rise on an eased curve (slow start, `rampExponent` 1.8). Spawn interval 3.0 s down to 0.7 s, cap 6 rising to 45, enemy HP growth 8 % per minute (was 12 %), Stumps from 35 % and Gambut from 70 % of the run. Spawn ring 13 (was 10: at the scene's camera tilt of 50 the screen corners are about 11.8 away, so enemies could appear on screen) |
+
+New `EnemySpawner` settings under **Gentle Start**: `Grace Period Seconds`, `Ramp Exponent`, `Starting Enemy Cap`. The values that were saved in the scene (intervals, cap, run length) were changed in the scene itself, so check them on the `_GameManagers` object.
+
+Note: the Main Camera in the scene has `Tilt Angle` saved as **50**, so the camera section's default of 35 only applies to a new `CameraFollow`. Change it on the camera if you want 35.
 
 ## Known issues
 
@@ -221,7 +294,7 @@ Also found and fixed while working (not in the original list):
 | # | Severity | Where | Problem |
 | :-: | :--- | :--- | :--- |
 | 2 | High | Scene and prefabs | The saved scene has the Player, ground, managers and HUD, but there are no FireBoss, FireProjectile, BurningGround, FoamBomb or FoamPuddle prefabs. Without a boss prefab the boss never spawns, so a run cannot be won. |
-| 8 | Medium | Sprite import | Sprites import at 100 pixels per unit. A 12 px ember is 0.12 units wide but its collider radius is 0.5. The scene camera size is 5. Characters appear tiny. |
+| 8 | Medium | Sprite import | Fix written 13 Nov 2026, needs the two menu items run. Sprites import at 100 pixels per unit, so the player is 0.16 units tall while many numbers in the game assume about 1. The Art Library's World Height now sizes every character, and its Hitbox Radius resizes the circle collider. |
 | 10 | Medium | `WaterTrail`, `FoamPuddle` | The Hydro-Dash puddle has no sprite, so it is invisible. `FoamPuddle.slowMultiplier` is never applied. |
 | 11 | Low | `FoamBombLauncher` | `Vector3.zero` means "no target", so a target at the origin is ignored. Physics queries run every frame and allocate. |
 | 12 | Low | Various | Dash covers 3.2 units (GDD: 4.5). Three Turbo Turbine ranks stack to about 20 / 36 / 49 % (GDD: 20 / 40 / 60 %). Default run is 300 s (GDD: 10-15 min). `Esc` pauses but there is no pause menu. |
@@ -273,8 +346,9 @@ A full overhaul was started on 1 Nov 2026. The audit is finished and the Foundat
 1. Open the project in Unity, let it compile, and fix any Console errors. `UISetupTool` and `PixelArtGenerator` were not opened this session. If one of them reports an error, look for a use of the removed `PlayerHealth.isInvulnerable` setter.
 2. Play-test the pooled projectiles once a scene exists: droplets and fireballs should fire, hit, pierce and expire as before. A reused projectile keeps nothing from its last flight because `Initialize()` resets it. If a droplet or fireball prefab later gets a trail or particle child, clear it when the object is reused. Pooling enemies would need their stat setup and `FinalizeHealth()` moved out of `Start()`, which does not run again on reuse.
 3. Re-run **HazeBuster > Create Complete Game UI & Level-Up Menu** once, then save the scene (Ctrl+S). This repairs the Level-Up menu in `SampleScene`. Then level up and check that the 3 cards appear and that clicking one resumes the game.
-4. Play-test the endless world (2 Nov 2026, not compiled). Walk far in one direction and come back: the ground must never show a seam or an edge, and the props must be exactly where you left them. Remembered marks only appear once a `BurningGround` prefab exists (open issue 2), because that is what leaves them. Tune `EnvironmentStreamer` in the Inspector (chunk size, props per chunk, prop size in tiles) and assign your own sprites to Decor Sprites. The arena code (`ArenaBounds.enabled`) is kept for a future closed boss fight.
+4. Play-test the endless world (2 Nov 2026, not compiled). Walk far in one direction and come back: the ground must never show a seam or an edge, and the props must be exactly where you left them. Remembered marks only appear once a `BurningGround` prefab exists (open issue 2), because that is what leaves them. Tune `EnvironmentStreamer` in the Inspector (chunk size, props per chunk, prop height in character heights) and assign your own sprites to Decor Sprites. The arena code (`ArenaBounds.enabled`) is kept for a future closed boss fight.
 5. The scene now has a Player, ground, managers and HUD, but no boss, FireProjectile, BurningGround, FoamBomb or FoamPuddle prefabs (open issue 2). Consider the one-click "Build Complete Game" tool next.
+6. Run the two menu items from Quick start step 7, save the scene, and play. Judge the size and the speeds by eye. Sizes live in the Art Library (World Height), speeds live in the Inspector of the Player and the enemy prefabs, and the camera zoom is the Main Camera's `Size`.
 
 ### Progress log
 
@@ -285,6 +359,8 @@ A full overhaul was started on 1 Nov 2026. The audit is finished and the Foundat
 | 2 Nov 2026 | Arena code finished, then made optional. Edited: `Weapons/WaterProjectile.cs` and `Boss/FireProjectile.cs` (shots end at the arena edge while the arena is on), `Utility/CameraFollow.cs` (new `clampToArena`, only acts while the arena is on) | Written, **not compiled** |
 | 2 Nov 2026 | Endless world, after the ground stopped following the player. New: `Environment/EnvironmentStreamer.cs` (chunked props, remembered marks, creates itself if the scene has none). Rewritten: `Utility/InfiniteGround.cs` (follows the camera, sizes itself to the view, locked to the world tile grid; the earlier `fitToArena` option is gone). Edited: `Utility/ArenaBounds.cs` (off by default), `Environment/BurningGround.cs` (leaves restored or scorched marks), `Enemies/EnemySpawner.cs` (boss spawn direction) | Written, **not compiled** |
 | 2 Nov 2026 | Level-up cards never appeared and the game stayed paused. Cause: `UISetupTool` made plain Transforms instead of RectTransforms, so it crashed at `Cards_Container` before building the 3 cards or wiring `UIManager.levelUpPanel` and `upgradeCards`. Fixed in `Editor/UISetupTool.cs` (every UI object gets a RectTransform; safe to re-run to repair the scene; also fixes the stretched backdrop, the health and EXP bar fills and the text sizes). Safety nets: `UI/UIManager.cs` and `Upgrades/UpgradeManager.cs` now log a red error and auto-pick the first upgrade if the menu is missing, so the game can never freeze | Written, **not compiled**. The scene still needs the tool re-run |
+| 13 Nov 2026 | Hell Maiden look, replaceable art, scale and enemy numbers. New: `Art/ArtLibrary.cs`, `Art/ArtSlot.cs`, `Utility/WorldScale.cs`, `Shaders/Resources/HazeBusterEndlessGround.shader`, `Editor/ArtSetupTool.cs`, `Editor/FeelSetupTool.cs`. Rewritten: `Utility/InfiniteGround.cs` (world-anchored endless surface instead of a tiled sprite, which could pop and shimmer). Edited: `Utility/CameraFollow.cs` (default tilt 35), `Environment/EnvironmentStreamer.cs` (props and marks sized in character heights, props stand on their feet, reads the Art Library), `Editor/PixelArtGenerator.cs` (no longer overwrites existing files or touches your own art's import settings), `Enemies/EmberEnemy.cs`, `BurnedStumpEnemy.cs`, `GambutEnemy.cs`, `Boss/FireBoss.cs` and `EnemyBase.cs` (speed, health and damage were forced in `Start()` on every spawn, so Inspector changes did nothing; they now come from the prefab) | Written, **not compiled**. Needs the two menu items run |
+| 13 Nov 2026 | Secondary weapons, after-effects and pacing. Edited: `Upgrades/UpgradeManager.cs` (weapons locked and switched off at the start, unlock cards switch them on), `Weapons/FoamBombProjectile.cs` (adds the missing `FoamPuddle`), `Weapons/FoamPuddle.cs` (size and hit area), `Environment/BurningGround.cs` and its prefab (lifetime 6 s), `Enemies/GambutEnemy.cs` and `Gambut.prefab` (drop every 3.5 s), `Enemies/EnemySpawner.cs` (grace period, eased ramp, enemy cap), `Scenes/SampleScene.unity` (run length 600 s, spawn numbers, spawn ring 13, puddle 4 s) | Written, **not compiled** |
 
 Planned approach for the rest: distance-based hit detection instead of physics callbacks, pooled projectiles, enemies and pickups, and one place that combines base, meta and run stat bonuses.
 

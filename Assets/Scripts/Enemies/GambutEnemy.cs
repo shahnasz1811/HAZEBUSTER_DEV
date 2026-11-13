@@ -12,19 +12,25 @@ namespace HazeBuster.Enemies
     {
         [Header("Gambut Ground Hazard Settings")]
         public GameObject burningGroundPrefab;
-        public float trailDropInterval = 1.8f;
+        public float trailDropInterval = 3.5f;
         private float trailTimer = 0f;
 
-        protected override void Start()
+        // Starting values for a NEW Gambut. Once the prefab exists, the numbers in its Inspector are
+        // the ones used. (They used to be forced here on every spawn, so changing them did nothing.)
+        public GambutEnemy()
         {
-            base.Start();
             enemyName = "Gambut Creeper";
             maxHealth = 45f;
-            FinalizeHealth(); // applies the spawner's health multiplier
             moveSpeed = 2.0f;
             contactDamage = 18f;
             dewDropAmount = 1;
             dewDropTier = DewPickup.DewTier.Medium; // 5 EXP per defeated Gambut monster!
+        }
+
+        protected override void Start()
+        {
+            base.Start();
+            FinalizeHealth(); // applies the spawner's health multiplier
         }
 
         protected override void Update()

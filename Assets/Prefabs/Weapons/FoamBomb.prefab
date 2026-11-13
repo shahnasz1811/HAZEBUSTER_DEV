@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: -5463591180493432151}
   - component: {fileID: 6788318417848795621}
   - component: {fileID: 438739308038577752}
+  - component: {fileID: 9108417607597756449}
   m_Layer: 0
   m_Name: FoamBomb
   m_TagString: Untagged
@@ -170,3 +171,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Weapons.FoamBombProjectile
   foamPuddlePrefab: {fileID: 921057266054311260, guid: f1e19c7003c13d84c9fe925560e3680a, type: 3}
+--- !u!114 &9108417607597756449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5605031013654370310}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb47bb6cdee196247932d720cd5738a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Art.ArtSlot
+  id: 8

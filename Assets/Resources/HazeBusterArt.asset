@@ -1,0 +1,122 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f1dbd9b4f64f1c43bbf77c7f687bc6c, type: 3}
+  m_Name: HazeBusterArt
+  m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Art.ArtLibrary
+  slots:
+  - id: 0
+    sprite: {fileID: 0}
+    animation: []
+    framesPerSecond: 8
+    worldHeight: 1
+    anchor: 0
+    hitboxRadius: 0.28
+    contactShadow: 1
+    shadowWidth: 0
+  - id: 1
+    sprite: {fileID: 0}
+    animation: []
+    framesPerSecond: 8
+    worldHeight: 0.75
+    anchor: 0
+    hitboxRadius: 0.3
+    contactShadow: 1
+    shadowWidth: 0
+  - id: 2
+    sprite: {fileID: 0}
+    animation: []
+    framesPerSecond: 8
+    worldHeight: 1.2
+    anchor: 0
+    hitboxRadius: 0.5
+    contactShadow: 1
+    shadowWidth: 0
+  - id: 3
+    sprite: {fileID: 0}
+    animation: []
+    framesPerSecond: 8
+    worldHeight: 1.1
+    anchor: 0
+    hitboxRadius: 0.45
+    contactShadow: 1
+    shadowWidth: 0
+  - id: 4
+    sprite: {fileID: 0}
+    animation: []
+    framesPerSecond: 8
+    worldHeight: 2.6
+    anchor: 0
+    hitboxRadius: 1
+    contactShadow: 1
+    shadowWidth: 0
+  - id: 5
+    sprite: {fileID: 0}
+    animation: []
+    framesPerSecond: 8
+    worldHeight: 0.45
+    anchor: 0
+    hitboxRadius: 0.25
+    contactShadow: 0
+    shadowWidth: 0
+  - id: 6
+    sprite: {fileID: 0}
+    animation: []
+    framesPerSecond: 8
+    worldHeight: 0.4
+    anchor: 0
+    hitboxRadius: 0.15
+    contactShadow: 0
+    shadowWidth: 0
+  - id: 7
+    sprite: {fileID: 0}
+    animation: []
+    framesPerSecond: 8
+    worldHeight: 0.7
+    anchor: 0
+    hitboxRadius: 0.25
+    contactShadow: 0
+    shadowWidth: 0
+  - id: 8
+    sprite: {fileID: 0}
+    animation: []
+    framesPerSecond: 8
+    worldHeight: 0.5
+    anchor: 0
+    hitboxRadius: 0
+    contactShadow: 0
+    shadowWidth: 0
+  - id: 9
+    sprite: {fileID: 0}
+    animation: []
+    framesPerSecond: 8
+    worldHeight: 0
+    anchor: 0
+    hitboxRadius: 0
+    contactShadow: 0
+    shadowWidth: 0
+  - id: 10
+    sprite: {fileID: 0}
+    animation: []
+    framesPerSecond: 8
+    worldHeight: 0
+    anchor: 0
+    hitboxRadius: 0
+    contactShadow: 0
+    shadowWidth: 0
+  groundTexture: {fileID: 0}
+  groundTileInCharacters: 10
+  groundTint: {r: 1, g: 1, b: 1, a: 1}
+  groundVariation: 0.3
+  props: []
+  restoredMark: {fileID: 0}
+  scorchedMark: {fileID: 0}
+  shadowOpacity: 0.35

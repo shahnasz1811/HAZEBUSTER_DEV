@@ -36,7 +36,9 @@ namespace HazeBuster.Weapons
             duration = puddleDuration;
             maxRadius = radius;
             damagePerSecond = dps;
-            col.radius = radius;
+            // The collider radius is in local units and the puddle is scaled up to maxRadius,
+            // so use half the sprite width here: the world radius then equals maxRadius.
+            col.radius = (sr != null && sr.sprite != null ? sr.sprite.bounds.size.x : 1f) * 0.5f;
 
             StartCoroutine(PuddleLifecycle());
         }
@@ -46,7 +48,8 @@ namespace HazeBuster.Weapons
             // Rapid expansion animation
             float expandTime = 0.3f;
             float elapsed = 0f;
-            Vector3 targetScale = Vector3.one * (maxRadius * 2f);
+            float spriteWidth = (sr != null && sr.sprite != null) ? sr.sprite.bounds.size.x : 1f;
+            Vector3 targetScale = Vector3.one * (maxRadius * 2f / Mathf.Max(0.01f, spriteWidth));
 
             while (elapsed < expandTime)
             {

@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 2949303097476224002}
   - component: {fileID: 3019073543453962683}
   - component: {fileID: 311029768672759009}
+  - component: {fileID: 6663772939547468943}
   m_Layer: 0
   m_Name: Ember
   m_TagString: Enemy
@@ -170,10 +171,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Enemies.EmberEnemy
   enemyName: Fire Hazard
-  maxHealth: 30
+  maxHealth: 15
   currentHealth: 0
-  moveSpeed: 0.1
-  contactDamage: 2
+  moveSpeed: 3
+  contactDamage: 10
   dewDropAmount: 1
   healthMultiplier: 1
   dewPrefab: {fileID: 1586141086967353211, guid: df0579dbe3f3d6647b89786a802803b9, type: 3}
@@ -184,3 +185,16 @@ MonoBehaviour:
   despawnDistance: 35
   wobbleFrequency: 0.01
   wobbleAmplitude: 0.14
+--- !u!114 &6663772939547468943
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 519847042789867597}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb47bb6cdee196247932d720cd5738a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Art.ArtSlot
+  id: 1

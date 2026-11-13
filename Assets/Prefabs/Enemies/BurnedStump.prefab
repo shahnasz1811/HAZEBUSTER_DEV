@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 78468056229434913}
   - component: {fileID: 4228459084913105960}
   - component: {fileID: 5771206890394501739}
+  - component: {fileID: 6844225085037342636}
   m_Layer: 0
   m_Name: BurnedStump
   m_TagString: Enemy
@@ -170,14 +171,31 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Enemies.BurnedStumpEnemy
   enemyName: Fire Hazard
-  maxHealth: 30
+  maxHealth: 80
   currentHealth: 0
-  moveSpeed: 3
-  contactDamage: 15
+  moveSpeed: 1.4
+  contactDamage: 25
   dewDropAmount: 1
+  healthMultiplier: 1
   dewPrefab: {fileID: 1586141086967353211, guid: df0579dbe3f3d6647b89786a802803b9, type: 3}
+  dewDropTier: 20
   spriteRenderer: {fileID: 0}
-  hurtColor: {r: 0, g: 1, b: 1, a: 1}
+  hurtColor: {r: 1, g: 0.00969137, b: 0, a: 1}
+  despawnWhenFar: 1
+  despawnDistance: 35
   smokePuffInterval: 6
   smokePuffRadius: 3
   smokeParticlePrefab: {fileID: 0}
+--- !u!114 &6844225085037342636
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3886511013046766345}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb47bb6cdee196247932d720cd5738a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HazeBuster.Art.ArtSlot
+  id: 2
